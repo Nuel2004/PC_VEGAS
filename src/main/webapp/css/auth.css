@@ -1,0 +1,119 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : 17 feb. 2026, 18:15:20
+    Author     : manur
+*/
+
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 40px 20px;
+}
+.auth-box {
+    background: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    width: 100%;
+    max-width: 800px;
+    border: 1px solid #eee;
+}
+/* Ajuste para el login que es más estrecho */
+.login-size {
+    max-width: 400px;
+}
+
+.auth-box h2 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: #111;
+    font-size: 2em;
+}
+
+/* Inputs y Labels */
+.form-group {
+    margin-bottom: 5px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+    font-size: 0.9em;
+}
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+    transition: border 0.3s;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.form-group input:focus, .form-group select:focus {
+    border-color: #e74c3c;
+}
+
+/* Grid para Registro */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.full-width {
+    grid-column: span 2;
+}
+
+/* Botones y Enlaces */
+.btn-submit {
+    width: 100%;
+    padding: 16px;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 1.1em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 15px;
+}
+.btn-submit:hover {
+    background: #e74c3c;
+}
+
+.auth-links {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 1em;
+    color: #666;
+}
+.auth-links.full-width {
+    grid-column: span 2;
+}
+.auth-links a {
+    color: #e74c3c;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+.auth-links a:hover {
+    color: #c0392b;
+}
+
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .full-width, .auth-links {
+        grid-column: span 1;
+    }
+}

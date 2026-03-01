@@ -1,0 +1,125 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : 17 feb. 2026, 18:15:03
+    Author     : manur
+*/
+
+/* Layout del Carrito */
+.carrito-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 40px auto;
+    gap: 30px;
+    padding: 0 20px;
+    align-items: flex-start;
+}
+.carrito-items {
+    flex: 2;
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.carrito-resumen {
+    flex: 1;
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 20px;
+}
+
+/* Filas de Productos */
+.item-fila {
+    display: flex;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+    align-items: center;
+}
+.item-img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 5px;
+}
+.item-info {
+    flex: 1;
+}
+.item-info h4 {
+    margin: 0 0 10px 0;
+    color: #111;
+    font-size: 1.1em;
+}
+.item-info p {
+    margin: 5px 0;
+    color: #555;
+}
+
+/* Botones Cantidad */
+.btn-qty {
+    background: #eee;
+    border: 1px solid #ccc;
+    padding: 5px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+}
+.btn-qty:hover {
+    background: #ddd;
+}
+
+/* Resumen */
+.resumen-linea {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    color: #555;
+    font-size: 1.1em;
+}
+.total-linea {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #111;
+    border-top: 2px solid #eee;
+    padding-top: 15px;
+    margin-top: 15px;
+}
+.acciones-carrito {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+/* Botón Comprar */
+.btn-comprar {
+    background: #111;
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    width: 100%;
+}
+.btn-comprar:hover {
+    background: #e74c3c;
+}
+
+@media (max-width: 768px) {
+    .carrito-container {
+        flex-direction: column;
+    }
+    .item-fila {
+        flex-direction: column;
+        text-align: center;
+    }
+}
