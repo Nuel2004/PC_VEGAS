@@ -78,7 +78,6 @@
                 color: #721c24;
                 border: 1px solid #f5c6cb;
             }
-            /* Estilo para el label que actúa de botón */
             .label-upload {
                 cursor: pointer;
                 color: #3498db;
@@ -102,27 +101,25 @@
 
                 <div class="avatar-preview">
                     <img id="imgPreview" src="${pageContext.request.contextPath}/img/${sessionScope.usuario.avatar}" 
-                     onerror="this.src='${pageContext.request.contextPath}/img/default.jpg'" class="avatar-img">
+                         onerror="this.src='${pageContext.request.contextPath}/img/default.jpg'" class="avatar-img">
             </div>
 
             <form action="${pageContext.request.contextPath}/PerfilController" method="post" enctype="multipart/form-data">
 
                 <div class="form-group" style="text-align: center;">
-                    <label for="newAvatar" class="label-upload">Cambiar foto de perfil</label>
-
-                    <input type="file" id="newAvatar" name="newAvatar" accept="image/*" style="display: none;">
-
+                    <label for="ficheroAvatar" class="label-upload">Cambiar foto de perfil</label>
+                    <input type="file" id="ficheroAvatar" name="ficheroAvatar" accept="image/*" style="display: none;">
                     <small id="avisoFoto" style="display:none; color: #27ae60; margin-top: 5px;">¡Nueva imagen seleccionada!</small>
                 </div>
 
                 <div class="form-group">
                     <label>Email (No editable)</label>
-                    <input type="email" value="${sessionScope.usuario.email}" readonly title="El email no se puede cambiar por seguridad">
+                    <input type="email" name="email" value="${sessionScope.usuario.email}" readonly title="El email no se puede cambiar por seguridad">
                 </div>
 
                 <div class="form-group">
                     <label>NIF / DNI (No editable)</label>
-                    <input type="text" id="nif" value="${sessionScope.usuario.nif}" readonly title="El NIF no se puede modificar">
+                    <input type="text" id="nif" name="nif" value="${sessionScope.usuario.nif}" readonly title="El NIF no se puede modificar">
                 </div>
 
                 <div class="form-group">

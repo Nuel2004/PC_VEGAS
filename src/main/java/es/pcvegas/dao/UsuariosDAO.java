@@ -3,237 +3,222 @@ package es.pcvegas.dao;
 import es.pcvegas.beans.Usuario;
 import es.pcvegas.daofactory.ConnectionFactory;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 public class UsuariosDAO implements IUsuariosDAO {
 
-    /**
-     * CORREGIDO: Ahora devuelve boolean para saber si el registro fue exitoso.
-     */
     @Override
-    public boolean registrar(Usuario usuario) {
-        boolean exito = false;
-        String sql = "INSERT INTO usuarios (email, password, nombre, apellidos, nif, telefono, direccion, codigo_postal, localidad, provincia, ultimo_acceso, avatar) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)";
-
-        Connection conexion = null;
-        PreparedStatement preparada = null;
+    public Usuario login(String email, String passwordMD5) {
+        Connection cn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Usuario u = null;
 
         try {
-            conexion = ConnectionFactory.getConnection();
-            conexion.setAutoCommit(false); // Inicio transacción
+            cn = ConnectionFactory.getConnection();
+            String sql = "SELECT * FROM usuarios WHERE email=? AND password=?";
+            ps = cn.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.setString(2, passwordMD5);
+            rs = ps.executeQuery();
 
-            preparada = conexion.prepareStatement(sql);
-
-            preparada.setString(1, usuario.getEmail());
-            preparada.setString(2, usuario.getPassword());
-            preparada.setString(3, usuario.getNombre());
-            preparada.setString(4, usuario.getApellidos());
-            preparada.setString(5, usuario.getNif());
-            preparada.setString(6, usuario.getTelefono());
-            preparada.setString(7, usuario.getDireccion());
-
-            String cp = usuario.getCodigoPostal();
-            if (cp == null || cp.trim().isEmpty()) {
-                cp = "00000";
+            if (rs.next()) {
+                u = mapearUsuario(rs);
             }
-            preparada.setString(8, cp.trim());
-
-            String localidad = usuario.getLocalidad();
-            if (localidad == null) {
-                localidad = "";
-            }
-            preparada.setString(9, localidad.trim());
-
-            String provincia = usuario.getProvincia();
-            if (provincia == null) {
-                provincia = "";
-            }
-            preparada.setString(10, provincia.trim());
-
-            String avatar = usuario.getAvatar();
-            if (avatar == null || avatar.trim().isEmpty()) {
-                avatar = "default.jpg";
-            }
-            preparada.setString(11, avatar.trim());
-
-            int filas = preparada.executeUpdate();
-            conexion.commit(); // Confirmamos cambios
-
-            if (filas > 0) {
-                exito = true;
-            }
-
         } catch (SQLException e) {
-            if (conexion != null) {
-                try {
-                    conexion.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
             e.printStackTrace();
-            // No lanzamos RuntimeException para que el Controller pueda manejar el false
         } finally {
-            if (conexion != null) {
-                try {
-                    conexion.setAutoCommit(true);
-                } catch (SQLException ignored) {
-                }
-            }
-            close(null, preparada, conexion);
+            close(rs, ps, cn);
         }
+        return u;
+    }
 
+    @Override
+    public int registrar(Usuario u) {
+        int id = -1;
+        Connection cn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            cn = ConnectionFactory.getConnection();
+            // password ya viene en MD5 desde el controlador/utilitis
+            String sql = "INSERT INTO usuarios (email, password, nombre, apellidos, nif, telefono, direccion, codigo_postal, localidad, provincia, ultimo_acceso, avatar) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)";
+
+            ps = cn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            ps.setString(1, u.getEmail());
+            ps.setString(2, u.getPassword());
+            ps.setString(3, u.getNombre());
+            ps.setString(4, u.getApellidos());
+            ps.setString(5, u.getNif());
+            ps.setString(6, u.getTelefono());
+            ps.setString(7, u.getDireccion());
+            ps.setString(8, u.getCodigoPostal());
+            ps.setString(9, u.getLocalidad());
+            ps.setString(10, u.getProvincia());
+            ps.setString(11, u.getAvatar()); // Suele ser "default.jpg" al inicio
+
+            ps.executeUpdate();
+
+            rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                id = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            close(rs, ps, cn);
+        }
+        return id;
+    }
+
+    // --- IMPLEMENTACIÓN DE LOS MÉTODOS QUE FALTABAN ---
+    @Override
+    public Usuario getUsuarioPorEmail(String email) {
+        Usuario u = null;
+        Connection cn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            cn = ConnectionFactory.getConnection();
+            String sql = "SELECT * FROM usuarios WHERE email=?";
+            ps = cn.prepareStatement(sql);
+            ps.setString(1, email);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                u = mapearUsuario(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            close(rs, ps, cn);
+        }
+        return u;
+    }
+
+    @Override
+    public boolean actualizarAvatar(int idUsuario, String nombreArchivo) {
+        boolean exito = false;
+        Connection cn = null;
+        PreparedStatement ps = null;
+        try {
+            cn = ConnectionFactory.getConnection();
+            String sql = "UPDATE usuarios SET avatar=? WHERE idusuario=?";
+            ps = cn.prepareStatement(sql);
+            ps.setString(1, nombreArchivo);
+            ps.setInt(2, idUsuario);
+            int filas = ps.executeUpdate();
+            exito = (filas > 0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            close(null, ps, cn);
+        }
         return exito;
     }
 
     @Override
-    public Usuario login(String email, String password) {
-        Usuario usuario = null;
-        String sql = "SELECT * FROM usuarios WHERE email = ? AND password = ?";
-
-        Connection conexion = null;
-        PreparedStatement preparada = null;
-        ResultSet resultado = null;
-
+    public boolean actualizarPerfil(Usuario u, String nuevoAvatar) {
+        boolean exito = false;
+        Connection cn = null;
+        PreparedStatement ps = null;
         try {
-            conexion = ConnectionFactory.getConnection();
-            preparada = conexion.prepareStatement(sql);
-            preparada.setString(1, email);
-            preparada.setString(2, password);
-            resultado = preparada.executeQuery();
+            cn = ConnectionFactory.getConnection();
+            StringBuilder sql = new StringBuilder("UPDATE usuarios SET nombre=?, apellidos=?, nif=?, telefono=?, direccion=?, codigo_postal=?, localidad=?, provincia=?");
 
-            if (resultado.next()) {
-                usuario = new Usuario();
-                usuario.setIdUsuario(resultado.getInt("idusuario"));
-                usuario.setEmail(resultado.getString("email"));
-                usuario.setNombre(resultado.getString("nombre"));
-                usuario.setApellidos(resultado.getString("apellidos"));
-                usuario.setNif(resultado.getString("nif"));
-                usuario.setTelefono(resultado.getString("telefono"));
-                usuario.setDireccion(resultado.getString("direccion"));
-                usuario.setCodigoPostal(resultado.getString("codigo_postal"));
-                usuario.setLocalidad(resultado.getString("localidad"));
-                usuario.setProvincia(resultado.getString("provincia"));
-
-                String avatarBD = resultado.getString("avatar");
-                if (avatarBD != null && !avatarBD.trim().isEmpty()) {
-                    usuario.setAvatar(avatarBD);
-                } else {
-                    usuario.setAvatar("default.jpg");
-                }
+            if (nuevoAvatar != null) {
+                sql.append(", avatar=?");
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            close(resultado, preparada, conexion);
-        }
+            sql.append(" WHERE idusuario=?");
 
-        return usuario;
-    }
+            ps = cn.prepareStatement(sql.toString());
+            ps.setString(1, u.getNombre());
+            ps.setString(2, u.getApellidos());
+            ps.setString(3, u.getNif());
+            ps.setString(4, u.getTelefono());
+            ps.setString(5, u.getDireccion());
+            ps.setString(6, u.getCodigoPostal());
+            ps.setString(7, u.getLocalidad());
+            ps.setString(8, u.getProvincia());
 
-    @Override
-    public Usuario getUsuarioPorEmail(String email) {
-        Usuario usuario = null;
-        String sql = "SELECT * FROM usuarios WHERE email = ?";
-
-        Connection conexion = null;
-        PreparedStatement preparada = null;
-        ResultSet resultado = null;
-
-        try {
-            conexion = ConnectionFactory.getConnection();
-            preparada = conexion.prepareStatement(sql);
-            preparada.setString(1, email);
-            resultado = preparada.executeQuery();
-
-            if (resultado.next()) {
-                usuario = new Usuario();
-                usuario.setIdUsuario(resultado.getInt("idusuario"));
-                usuario.setEmail(resultado.getString("email"));
-                usuario.setNombre(resultado.getString("nombre"));
-                // ... (puedes rellenar el resto si lo necesitas)
+            int i = 9;
+            if (nuevoAvatar != null) {
+                ps.setString(i++, nuevoAvatar);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            close(resultado, preparada, conexion);
-        }
+            ps.setInt(i, u.getIdUsuario());
 
-        return usuario;
-    }
-
-    @Override
-    public void actualizarAvatar(int idUsuario, String avatar) {
-        String sql = "UPDATE usuarios SET avatar = ? WHERE idusuario = ?";
-
-        Connection conexion = null;
-        PreparedStatement preparada = null;
-
-        try {
-            conexion = ConnectionFactory.getConnection();
-            preparada = conexion.prepareStatement(sql);
-
-            if (avatar == null || avatar.trim().isEmpty()) {
-                avatar = "default.jpg";
-            }
-
-            preparada.setString(1, avatar.trim());
-            preparada.setInt(2, idUsuario);
-            preparada.executeUpdate();
+            int filas = ps.executeUpdate();
+            exito = (filas > 0);
 
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            close(null, preparada, conexion);
+            close(null, ps, cn);
         }
+        return exito;
     }
 
     @Override
-    public void eliminar(int idUsuario) {
-        String sql = "DELETE FROM usuarios WHERE idusuario = ?";
-
-        Connection conexion = null;
-        PreparedStatement preparada = null;
-
+    public void eliminar(int idusuario) {
+        Connection cn = null;
+        PreparedStatement ps = null;
         try {
-            conexion = ConnectionFactory.getConnection();
-            conexion.setAutoCommit(false);
-
-            preparada = conexion.prepareStatement(sql);
-            preparada.setInt(1, idUsuario);
-            preparada.executeUpdate();
-
-            conexion.commit();
-
+            cn = ConnectionFactory.getConnection();
+            String sql = "DELETE FROM usuarios WHERE idusuario=?";
+            ps = cn.prepareStatement(sql);
+            ps.setInt(1, idusuario);
+            ps.executeUpdate();
         } catch (SQLException e) {
-            if (conexion != null) {
-                try {
-                    conexion.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
             e.printStackTrace();
         } finally {
-            if (conexion != null) {
-                try {
-                    conexion.setAutoCommit(true);
-                } catch (SQLException ignored) {
-                }
-            }
-            close(null, preparada, conexion);
+            close(null, ps, cn);
         }
     }
 
     @Override
-    public void close() {
-        // No-op
+    public void actualizarUltimoAcceso(int idusuario, Date fecha) {
+        Connection cn = null;
+        PreparedStatement ps = null;
+        try {
+            cn = ConnectionFactory.getConnection();
+            String sql = "UPDATE usuarios SET ultimo_acceso=? WHERE idusuario=?";
+            ps = cn.prepareStatement(sql);
+            // Usamos Timestamp para guardar hora exacta
+            ps.setTimestamp(1, new Timestamp(fecha.getTime()));
+            ps.setInt(2, idusuario);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            close(null, ps, cn);
+        }
     }
 
-    private void close(ResultSet rs, PreparedStatement ps, Connection conn) {
+    // Método auxiliar para no repetir código de mapeo
+    private Usuario mapearUsuario(ResultSet rs) throws SQLException {
+        Usuario u = new Usuario();
+        u.setIdUsuario(rs.getInt("idusuario"));
+        u.setEmail(rs.getString("email"));
+        u.setPassword(rs.getString("password"));
+        u.setNombre(rs.getString("nombre"));
+        u.setApellidos(rs.getString("apellidos"));
+        u.setNif(rs.getString("nif"));
+        u.setTelefono(rs.getString("telefono"));
+        u.setDireccion(rs.getString("direccion"));
+        u.setCodigoPostal(rs.getString("codigo_postal"));
+        u.setLocalidad(rs.getString("localidad"));
+        u.setProvincia(rs.getString("provincia"));
+        u.setUltimoAcceso(rs.getTimestamp("ultimo_acceso"));
+        u.setAvatar(rs.getString("avatar"));
+        return u;
+    }
+
+    private void close(ResultSet rs, PreparedStatement ps, Connection cn) {
         try {
             if (rs != null) {
                 rs.close();
@@ -241,92 +226,11 @@ public class UsuariosDAO implements IUsuariosDAO {
             if (ps != null) {
                 ps.close();
             }
-            if (conn != null) {
-                conn.close();
+            if (cn != null) {
+                cn.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    // Añádelo también en la interfaz IUsuariosDAO si la tienes
-    public boolean actualizarPerfil(es.pcvegas.beans.Usuario u) {
-        boolean exito = false;
-        String sql = "UPDATE usuarios SET nombre=?, apellidos=?, nif=?, telefono=?, "
-                + "direccion=?, codigo_postal=?, localidad=?, provincia=? "
-                + "WHERE idusuario=?";
-
-        Connection conexion = null;
-        PreparedStatement preparada = null;
-
-        try {
-            conexion = ConnectionFactory.getConnection();
-            preparada = conexion.prepareStatement(sql);
-
-            preparada.setString(1, u.getNombre());
-            preparada.setString(2, u.getApellidos());
-            preparada.setString(3, u.getNif());
-            preparada.setString(4, u.getTelefono());
-            preparada.setString(5, u.getDireccion());
-            preparada.setString(6, u.getCodigoPostal());
-            preparada.setString(7, u.getLocalidad());
-            preparada.setString(8, u.getProvincia());
-
-            // EL WHERE
-            preparada.setInt(9, u.getIdUsuario());
-
-            int filas = preparada.executeUpdate();
-            if (filas > 0) {
-                exito = true;
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            this.close(null, preparada, conexion);
-        }
-        return exito;
-    }
-
-    @Override
-    public boolean actualizarPerfil(es.pcvegas.beans.Usuario u, String nuevoAvatarFilename) {
-        boolean exito = false;
-        String sql = "UPDATE usuarios SET nombre=?, apellidos=?, nif=?, telefono=?, "
-                + "direccion=?, codigo_postal=?, localidad=?, provincia=?, avatar=? "
-                + "WHERE idusuario=?";
-
-        Connection conexion = null;
-        PreparedStatement preparada = null;
-
-        try {
-            conexion = ConnectionFactory.getConnection();
-            preparada = conexion.prepareStatement(sql);
-
-            preparada.setString(1, u.getNombre());
-            preparada.setString(2, u.getApellidos());
-            preparada.setString(3, u.getNif());
-            preparada.setString(4, u.getTelefono());
-            preparada.setString(5, u.getDireccion());
-            preparada.setString(6, u.getCodigoPostal());
-            preparada.setString(7, u.getLocalidad());
-            preparada.setString(8, u.getProvincia());
-
-            // EL AVATAR
-            preparada.setString(9, nuevoAvatarFilename);
-
-            // EL WHERE
-            preparada.setInt(10, u.getIdUsuario());
-
-            int filas = preparada.executeUpdate();
-            if (filas > 0) {
-                exito = true;
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            this.close(null, preparada, conexion);
-        }
-        return exito;
     }
 }

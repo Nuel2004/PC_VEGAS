@@ -1,23 +1,26 @@
 package es.pcvegas.dao;
 
 import es.pcvegas.beans.Usuario;
+import java.sql.Date;
 
 public interface IUsuariosDAO {
 
-    public boolean registrar(Usuario usuario);
+    Usuario login(String email, String passwordMD5);
 
-    public Usuario getUsuarioPorEmail(String email);
+    int registrar(Usuario u);
 
-    public Usuario login(String email, String password);
+    void eliminar(int idusuario);
 
-    public void close();
+    void actualizarUltimoAcceso(int idusuario, Date fecha);
 
-    public void actualizarAvatar(int idUsuario, String avatar);
+    // --- MÉTODOS QUE FALTABAN Y CAUSABAN ERROR ---
+    
+    // Usado en RegistroController para verificar si el email existe
+    Usuario getUsuarioPorEmail(String email);
 
-    public void eliminar(int idUsuario);
+    // Usado en RegistroController para guardar la foto tras obtener el ID
+    boolean actualizarAvatar(int idUsuario, String nombreArchivo);
 
-    public boolean actualizarPerfil(es.pcvegas.beans.Usuario u);
-    // Cambia la firma para que acepte el avatar también
-
-    public boolean actualizarPerfil(es.pcvegas.beans.Usuario u, String nuevoAvatarFilename);
+    // Usado en PerfilController para guardar cambios
+    boolean actualizarPerfil(Usuario u, String nuevoAvatar);
 }

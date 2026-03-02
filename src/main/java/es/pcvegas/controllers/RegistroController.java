@@ -25,6 +25,7 @@ public class RegistroController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Simplemente mostramos el formulario
         request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
     }
 
@@ -34,111 +35,110 @@ public class RegistroController extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        // ====================================================================
-        //  NUEVO: BLOQUE PARA GESTIONAR PETICIONES AJAX (Comprobar Email)
-        // ====================================================================
-        String tipoAccion = request.getParameter("accion");
+        // -----------------------------------------------------------
+        // 1. VALIDACIÓN AJAX (Para comprobar si el email existe en vivo)
+        // -----------------------------------------------------------
+        String accion = request.getParameter("accion");
+        if ("comprobarEmail".equals(accion)) {
+            String email = request.getParameter("email");
+            DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
+            IUsuariosDAO udao = daof.getUsuariosDAO();
+            Usuario u = udao.getUsuarioPorEmail(email);
 
-        if ("comprobarEmail".equals(tipoAccion)) {
-            String emailCheck = request.getParameter("email");
-            response.setContentType("text/plain"); // Respondemos texto plano, no HTML
-
-            if (emailCheck != null && !emailCheck.isEmpty()) {
-                DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
-                IUsuariosDAO udao = daof.getUsuariosDAO();
-
-                if (udao.getUsuarioPorEmail(emailCheck) != null) {
-                    response.getWriter().write("OCUPADO");
-                } else {
-                    response.getWriter().write("LIBRE");
-                }
-            }
-            return; // ¡IMPORTANTE! Cortamos aquí para que no siga con el registro
-        }
-        // ====================================================================
-
-        // 1. Lógica normal de REGISTRO (Si no es una comprobación AJAX)
-        String pass = request.getParameter("password");
-        String passRepetida = request.getParameter("password_repetida");
-        String email = request.getParameter("email");
-
-        if (pass == null || !pass.equals(passRepetida)) {
-            request.setAttribute("error", "Las contraseñas no coinciden.");
-            request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
-            return;
+            response.setContentType("text/plain");
+            response.getWriter().write(u != null ? "OCUPADO" : "LIBRE");
+            return; // Cortamos aquí, no seguimos registrando
         }
 
+        // -----------------------------------------------------------
+        // 2. PROCESO DE REGISTRO ESTÁNDAR
+        // -----------------------------------------------------------
+        int idGenerado = -1;
         DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
         IUsuariosDAO udao = daof.getUsuariosDAO();
 
-        // Doble comprobación de seguridad (Backend)
-        if (udao.getUsuarioPorEmail(email) != null) {
-            request.setAttribute("error", "Ese email ya está registrado.");
-            request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
-            return;
-        }
-
-        Usuario nuevoUsuario = new Usuario();
-
         try {
+            Usuario nuevoUsuario = new Usuario();
+
+            // A) Carga automática de datos (nombre, apellidos, email, telefono, direccion...)
+            // Nota: BeanUtils ignorará 'password_confirm' porque no existe en la clase Usuario
             BeanUtils.populate(nuevoUsuario, request.getParameterMap());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
-        nuevoUsuario.setPassword(Utilitis.getMD5(pass));
+            // B) VALIDACIÓN DE CONTRASEÑAS (Lo que pediste)
+            String pass1 = nuevoUsuario.getPassword();
+            String pass2 = request.getParameter("password_confirm");
 
-        String nifNumeros = request.getParameter("nif_numeros");
-        String nifCalculado = Utilitis.calcularNifCompleto(nifNumeros);
+            if (pass1 == null || pass2 == null || !pass1.equals(pass2)) {
+                request.setAttribute("error", "Las contraseñas no coinciden. Por favor, inténtalo de nuevo.");
+                // Devolvemos el usuario al JSP para no borrarle todo lo que escribió
+                request.setAttribute("usuarioPre", nuevoUsuario);
+                request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
+                return;
+            }
 
-        if (nifCalculado != null) {
-            nuevoUsuario.setNif(nifCalculado);
-        } else {
-            request.setAttribute("error", "El NIF debe tener 8 números.");
-            request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
-            return;
-        }
+            // C) CORRECCIÓN DEL NIF (Añadir letra)
+            String nifNumeros = nuevoUsuario.getNif(); // BeanUtils cargó solo los números
+            if (nifNumeros != null && nifNumeros.matches("\\d{8}")) {
+                String nifCompleto = Utilitis.calcularNifCompleto(nifNumeros);
+                nuevoUsuario.setNif(nifCompleto);
+            }
 
-        nuevoUsuario.setAvatar("default.jpg");
+            // D) SEGURIDAD Y VALORES POR DEFECTO
+            nuevoUsuario.setPassword(Utilitis.getMD5(pass1)); // Encriptamos
+            nuevoUsuario.setAvatar("default.jpg"); // Imagen provisional
 
-        int idGenerado = -1;
+            // E) INSERTAR EN BASE DE DATOS
+            idGenerado = udao.registrar(nuevoUsuario);
 
-        try {
-            boolean registroOk = udao.registrar(nuevoUsuario);
-
-            if (registroOk) {
-                Usuario uGuardado = udao.getUsuarioPorEmail(nuevoUsuario.getEmail());
-                idGenerado = uGuardado.getIdUsuario();
+            // F) GESTIÓN DE LA IMAGEN (Solo si se registró correctamente)
+            if (idGenerado != -1) {
 
                 Part filePart = request.getPart("ficheroAvatar");
 
-                if (filePart != null && filePart.getSize() > 0) {
-                    String nombreArchivo = "avatar_" + idGenerado + ".jpg";
+                if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName().length() > 0) {
+
+                    // 1. Obtener extensión (.jpg, .png)
+                    String nombreOriginal = filePart.getSubmittedFileName();
+                    String extension = ".jpg"; // Por defecto
+                    if (nombreOriginal.contains(".")) {
+                        extension = nombreOriginal.substring(nombreOriginal.lastIndexOf("."));
+                    }
+
+                    // 2. Crear nombre único: avatar_ID.ext
+                    String nombreArchivo = "avatar_" + idGenerado + extension;
                     String rutaDirectorio = getServletContext().getRealPath("/img");
 
+                    // 3. Guardar en disco
                     boolean imagenGuardada = Utilitis.guardarImagen(filePart, rutaDirectorio, nombreArchivo);
 
+                    // 4. Actualizar BD con el nombre real
                     if (imagenGuardada) {
                         udao.actualizarAvatar(idGenerado, nombreArchivo);
                     } else {
-                        throw new IOException("Fallo al escribir en disco");
+                        // Si falla al guardar la imagen, lanzamos excepción para provocar el rollback manual
+                        throw new IOException("No se pudo guardar la imagen en el servidor.");
                     }
                 }
 
-                // Registro exitoso -> Al login
+                // --- ÉXITO TOTAL ---
                 response.sendRedirect(request.getContextPath() + "/login");
 
             } else {
-                request.setAttribute("error", "Error al insertar en base de datos.");
+                // Falló el INSERT (probablemente email duplicado no detectado por JS)
+                request.setAttribute("error", "Error al registrar: El email o el NIF ya existen.");
                 request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+
+            // --- ROLLBACK MANUAL (Requisito del profesor) ---
+            // Si el usuario se creó en BD pero falló algo después (ej: la imagen), lo borramos.
             if (idGenerado != -1) {
                 udao.eliminar(idGenerado);
             }
-            request.setAttribute("error", "Error en el registro. Inténtelo de nuevo.");
+
+            request.setAttribute("error", "Error técnico durante el registro: " + e.getMessage());
             request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
         }
     }

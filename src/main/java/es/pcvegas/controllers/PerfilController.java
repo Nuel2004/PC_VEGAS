@@ -4,12 +4,7 @@ import es.pcvegas.beans.Usuario;
 import es.pcvegas.dao.IUsuariosDAO;
 import es.pcvegas.daofactory.DAOFactory;
 import es.pcvegas.models.Utilitis;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -20,20 +15,20 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
 @WebServlet(name = "PerfilController", urlPatterns = {"/PerfilController", "/perfil"})
-// CAMBIO 1: Anotación obligatoria para procesar ficheros
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 1, // 1MB
-        maxFileSize = 1024 * 1024 * 10, // 10MB
-        maxRequestSize = 1024 * 1024 * 15 // 15MB
+        fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
+        maxFileSize = 1024 * 1024 * 10, // 10 MB
+        maxRequestSize = 1024 * 1024 * 15 // 15 MB
 )
 public class PerfilController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Seguridad: Si no hay usuario, mandar al login
         HttpSession session = request.getSession();
         if (session.getAttribute("usuario") == null) {
-            request.getRequestDispatcher("/login").forward(request, response);
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
         request.getRequestDispatcher("/jsp/perfil.jsp").forward(request, response);
@@ -45,65 +40,16 @@ public class PerfilController extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
         HttpSession session = request.getSession();
-        Usuario usuarioActual = (Usuario) session.getAttribute("usuario");
+        Usuario usuarioSesion = (Usuario) session.getAttribute("usuario");
 
-        if (usuarioActual == null) {
-            request.getRequestDispatcher("/login").forward(request, response);
+        if (usuarioSesion == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        // CAMBIO 2: PROCESAR EL FICHERO
-        String avatarFilename = request.getParameter("avatarActual"); // Por defecto, mantenemos el actual
-        Part filePart = request.getPart("newAvatar"); // Obtenemos el fichero subido
-
-        // Comprobamos si el usuario ha seleccionado un fichero real
-        if (filePart != null && filePart.getSize() > 0) {
-            try {
-                // Obtenemos el nombre original del fichero
-                String originalFilename = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                // Obtenemos la extensión (ej: .jpg)
-                String extension = "";
-                int i = originalFilename.lastIndexOf('.');
-                if (i > 0) {
-                    extension = originalFilename.substring(i);
-                }
-
-                // Creamos un nombre único para evitar duplicados, usando el ID del usuario
-                avatarFilename = "avatar_" + usuarioActual.getIdUsuario() + "_" + System.currentTimeMillis() + extension;
-
-                // Definimos la ruta absoluta donde guardar la imagen (en web/img/)
-                String uploadFolder = getServletContext().getRealPath("/") + "img";
-
-                // Nos aseguramos de que la carpeta existe
-                File folder = new File(uploadFolder);
-                if (!folder.exists()) {
-                    folder.mkdirs();
-                }
-
-                // Guardamos el fichero en disco
-                File fileToSave = new File(folder, avatarFilename);
-                try (InputStream fileContent = filePart.getInputStream()) {
-                    Files.copy(fileContent, fileToSave.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                }
-
-                // (Opcional) Borrar el avatar antiguo si no era 'default.jpg'
-                String antiguoAvatar = request.getParameter("avatarActual");
-                if (antiguoAvatar != null && !antiguoAvatar.isEmpty() && !antiguoAvatar.equals("default.jpg")) {
-                    File fileOld = new File(folder, antiguoAvatar);
-                    if (fileOld.exists()) {
-                        fileOld.delete();
-                    }
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                request.setAttribute("mensajeError", "Hubo un problema al subir la imagen.");
-                request.getRequestDispatcher("/jsp/perfil.jsp").forward(request, response);
-                return;
-            }
-        }
-
-        // CAMBIO 3: Recogemos el resto de datos editables
+        // Creamos una copia para intentar actualizar, así si falla la BD no corrompemos la sesión
+        // (En este caso simple, modificaremos el objeto pero con cuidado de no meter nulos)
+        // 1. Recogida de parámetros de texto
         String nombre = request.getParameter("nombre");
         String apellidos = request.getParameter("apellidos");
         String nif = request.getParameter("nif");
@@ -113,33 +59,77 @@ public class PerfilController extends HttpServlet {
         String localidad = request.getParameter("localidad");
         String provincia = request.getParameter("provincia");
 
-        // 4. Actualizamos el objeto Usuario de la sesión
-        usuarioActual.setNombre(nombre);
-        usuarioActual.setApellidos(apellidos);
-        usuarioActual.setNif(nif);
-        usuarioActual.setTelefono(telefono);
-        usuarioActual.setDireccion(direccion);
-        usuarioActual.setCodigoPostal(cp);
-        usuarioActual.setLocalidad(localidad);
-        usuarioActual.setProvincia(provincia);
-        // El avatar no se toca en la sesión hasta confirmar el éxito en BD, 
-        // pero lo usaremos para el DAO.
+        // 2. Procesamiento de la Imagen (Avatar)
+        Part filePart = request.getPart("ficheroAvatar"); // nombre del input type="file"
+        String avatarFilename = null;
 
-        // 5. Guardamos en Base de Datos (PERSISTENCIA), incluyendo el nuevo avatar
+        if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName().length() > 0) {
+            // Generamos nombre único: idUsuario_timestamp.jpg
+            String extension = ".jpg"; // Por simplificar asumimos jpg o extraemos extensión
+            if (filePart.getSubmittedFileName().contains(".")) {
+                extension = filePart.getSubmittedFileName().substring(filePart.getSubmittedFileName().lastIndexOf("."));
+            }
+            avatarFilename = "avatar_" + usuarioSesion.getIdUsuario() + "_" + System.currentTimeMillis() + extension;
+
+            String rutaReal = getServletContext().getRealPath("/img");
+
+            boolean subidaCorrecta = Utilitis.guardarImagen(filePart, rutaReal, avatarFilename);
+            if (!subidaCorrecta) {
+                avatarFilename = null; // Si falla, no actualizamos la foto
+            }
+        }
+
+        // 3. Actualización del Objeto Usuario (SOLO SI NO SON NULL)
+        // Corrección del error: Si nif viene null, NO lo tocamos.
+        if (nombre != null && !nombre.isEmpty()) {
+            usuarioSesion.setNombre(nombre);
+        }
+        if (apellidos != null && !apellidos.isEmpty()) {
+            usuarioSesion.setApellidos(apellidos);
+        }
+
+        // AQUÍ ESTABA EL FALLO: Solo actualizamos NIF si viene un valor real
+        if (nif != null && !nif.trim().isEmpty()) {
+            usuarioSesion.setNif(nif);
+        }
+
+        if (telefono != null) {
+            usuarioSesion.setTelefono(telefono);
+        }
+        if (direccion != null) {
+            usuarioSesion.setDireccion(direccion);
+        }
+        if (cp != null) {
+            usuarioSesion.setCodigoPostal(cp);
+        }
+        if (localidad != null) {
+            usuarioSesion.setLocalidad(localidad);
+        }
+        if (provincia != null) {
+            usuarioSesion.setProvincia(provincia);
+        }
+
+        // La foto solo se cambia si el usuario subió una nueva
+        String avatarParaGuardar = (avatarFilename != null) ? avatarFilename : usuarioSesion.getAvatar();
+
+        // 4. Guardar en Base de Datos
         DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
         IUsuariosDAO udao = daof.getUsuariosDAO();
 
-        boolean resultado = udao.actualizarPerfil(usuarioActual, avatarFilename);
+        boolean exito = udao.actualizarPerfil(usuarioSesion, avatarFilename); // Pasamos avatarFilename (puede ser null si no cambió)
 
-        if (resultado) {
-            request.setAttribute("mensajeExito", "¡Datos e imagen actualizados correctamente!");
-            usuarioActual.setAvatar(avatarFilename); // Confirmado el éxito, actualizamos el avatar en la sesión
-            session.setAttribute("usuario", usuarioActual);
+        if (exito) {
+            // Si la BD actualizó bien, confirmamos el cambio de avatar en el objeto de sesión
+            if (avatarFilename != null) {
+                usuarioSesion.setAvatar(avatarFilename);
+            }
+            session.setAttribute("usuario", usuarioSesion); // Refrescamos sesión
+            request.setAttribute("mensajeExito", "Perfil actualizado correctamente.");
         } else {
-            request.setAttribute("mensajeError", "Hubo un error al guardar los datos en la base de datos.");
+            request.setAttribute("mensajeError", "No se pudieron guardar los cambios en la base de datos.");
         }
 
-        // 6. Volvemos a mostrar la página con el mensaje
+        // 5. Volver a la vista
         request.getRequestDispatcher("/jsp/perfil.jsp").forward(request, response);
     }
 }

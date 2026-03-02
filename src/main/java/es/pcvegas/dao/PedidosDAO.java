@@ -10,8 +10,8 @@ import java.util.List;
 
 public class PedidosDAO implements IPedidosDAO {
 
-    private static final String ESTADO_CARRITO = "C";
-    private static final String ESTADO_FINAL = "F";
+    private static final String ESTADO_CARRITO = "c";
+    private static final String ESTADO_FINAL = "f";
 
     @Override
     public int crearPedido(Pedido pedido) {

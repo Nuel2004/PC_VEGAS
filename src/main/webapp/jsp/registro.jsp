@@ -33,8 +33,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="password_repetida">Repetir Contraseña *</label>
-                        <input type="password" id="password_repetida" name="password_repetida" required maxlength="100" placeholder="••••••••">
+                        <label for="password_confirm">Repetir Contraseña *</label>
+                        <input type="password" id="password_confirm" name="password_confirm" required maxlength="100" placeholder="Repite la contraseña">
                     </div>
 
                     <div class="form-group">
@@ -50,41 +50,40 @@
                     <div class="form-group">
                         <label for="nif_numeros">NIF / DNI *</label>
                         <div style="display: flex; gap: 10px;">
-                            <input type="text" id="nif_numeros" name="nif_numeros" required maxlength="8" pattern="[0-9]{8}" title="Introduce los 8 números de tu DNI" placeholder="12345678" style="flex: 3;"> 
-                            <input type="text" id="nif_letra" name="nif_letra" readonly style="flex: 1; text-align: center; font-weight: bold; background-color: #e9ecef; cursor: not-allowed;" placeholder="-">
+                            <input type="text" id="nif_numeros" name="nif" required maxlength="8" placeholder="Números" style="flex: 3;">
+                            <input type="text" id="nif_letra" readonly placeholder="Letra" style="flex: 1; text-align: center; font-weight: bold;">
                         </div>
-                        <small style="color: #666; font-size: 0.8em; margin-top: 5px; display: block;">Escribe los números y calcularemos la letra.</small>
                     </div>
 
                     <div class="form-group">
                         <label for="telefono">Teléfono</label>
-                        <input type="tel" id="telefono" name="telefono" maxlength="9" pattern="[0-9]{9}" title="Debe contener 9 números" placeholder="600123456">
+                        <input type="tel" id="telefono" name="telefono" maxlength="9" placeholder="600112233">
                     </div>
 
                     <div class="form-group full-width">
-                        <label for="direccion">Dirección Completa *</label>
-                        <input type="text" id="direccion" name="direccion" required maxlength="40">
+                        <label for="direccion">Dirección *</label>
+                        <input type="text" id="direccion" name="direccion" required maxlength="40" placeholder="Tu dirección completa">
                     </div>
 
                     <div class="form-group">
-                        <label for="codigo_postal">Código Postal *</label>
-                        <input type="text" id="codigo_postal" name="codigo_postal" required maxlength="5" pattern="[0-9]{5}" title="Debe contener 5 números" placeholder="28001">
+                        <label for="codigoPostal">Código Postal *</label>
+                        <input type="text" id="codigoPostal" name="codigoPostal" required maxlength="5">
                     </div>
 
                     <div class="form-group">
                         <label for="localidad">Localidad *</label>
-                        <input type="text" id="localidad" name="localidad" required maxlength="40" placeholder="Ciudad o municipio">
+                        <input type="text" id="localidad" name="localidad" required maxlength="40">
                     </div>
 
                     <div class="form-group">
                         <label for="provincia">Provincia *</label>
-                        <input type="text" id="provincia" name="provincia" required maxlength="30" placeholder="Provincia">
+                        <input type="text" id="provincia" name="provincia" required maxlength="30">
                     </div>
 
-                    <div class="form-group full-width" style="margin-top: 20px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
-                        <label>Foto de Perfil (Opcional)</label>
+                    <div class="form-group full-width" style="text-align: center; margin-top: 20px;">
+                        <label style="display: block; margin-bottom: 10px;">Foto de Perfil (Opcional)</label>
 
-                        <div style="margin: 10px auto; width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 3px solid #ddd; background: #f9f9f9; display: flex; align-items: center; justify-content: center;">
+                        <div class="avatar-preview" style="width: 100px; height: 100px; margin: 0 auto 15px auto; border-radius: 50%; overflow: hidden; border: 3px solid #ddd;">
                             <img id="imgPreview" src="${pageContext.request.contextPath}/img/default.jpg" alt="Tu Foto" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
 
@@ -96,7 +95,7 @@
                         <span id="nombreArchivo" style="color: #666; font-size: 0.9em;">Ningún archivo seleccionado</span>
                     </div>
 
-                    <button type="submit" class="btn-submit">Crear Cuenta</button>
+                    <button type="submit" class="btn-submit" style="margin-top: 20px;">Crear Cuenta</button>
 
                     <div class="auth-links">
                         ¿Ya tienes una cuenta? <a href="${pageContext.request.contextPath}/login">Inicia Sesión aquí</a>

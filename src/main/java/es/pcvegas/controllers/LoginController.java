@@ -1,10 +1,15 @@
 package es.pcvegas.controllers;
 
+import es.pcvegas.beans.LineaPedido;
+import es.pcvegas.beans.Pedido;
+import es.pcvegas.beans.Producto;
 import es.pcvegas.beans.Usuario;
+import es.pcvegas.dao.IProductosDAO;
 import es.pcvegas.dao.IUsuariosDAO;
 import es.pcvegas.daofactory.DAOFactory;
 import es.pcvegas.models.Utilitis;
 import java.io.IOException;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -18,7 +23,7 @@ public class LoginController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        doPost(request, response);
+        request.getRequestDispatcher("/jsp/login.jsp").forward(request, response);
     }
 
     @Override
@@ -26,35 +31,81 @@ public class LoginController extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession sesion = request.getSession();
-        String email = request.getParameter("email");
 
-        // CASO 1: Si ya está logueado, mandamos al inicio
         if (sesion.getAttribute("usuario") != null) {
-            request.getRequestDispatcher("/inicio").forward(request, response);
+            response.sendRedirect(request.getContextPath() + "/inicio");
             return;
         }
 
-        // CASO 2: Si viene el email, es que están intentando loguearse (PROCESAR FORMULARIO)
-        if (email != null) {
-            String passwordPlana = request.getParameter("password");
-            String passwordMD5 = Utilitis.getMD5(passwordPlana);
+        String email = request.getParameter("email");
+        String password = request.getParameter("password");
+
+        if (email != null && password != null) {
+            String passwordMD5 = Utilitis.getMD5(password);
 
             DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
             IUsuariosDAO udao = daof.getUsuariosDAO();
+
             Usuario usuarioValidado = udao.login(email, passwordMD5);
 
             if (usuarioValidado != null) {
-                // Login correcto
+                // LOGIN CORRECTO
                 sesion.setAttribute("usuario", usuarioValidado);
-                request.getRequestDispatcher("/inicio").forward(request, response);
-                Utilitis.borrarCookieCarrito(response);
+
+                // --- GESTIÓN DEL CARRITO (COOKIE -> SESIÓN) ---
+                if (usuarioValidado.getUltimoAcceso() == null) {
+                    // Usuario NUEVO: Intentamos recuperar carrito de cookie
+                    Map<Integer, Integer> mapaCookie = Utilitis.leerCookieCarrito(request);
+
+                    if (mapaCookie != null && !mapaCookie.isEmpty()) {
+                        // CONVERTIR MAPA A OBJETO PEDIDO
+                        Pedido carritoRecuperado = new Pedido();
+                        carritoRecuperado.setIdUsuario(usuarioValidado.getIdUsuario());
+
+                        IProductosDAO pdao = daof.getProductosDAO();
+                        double subtotal = 0.0;
+
+                        for (Map.Entry<Integer, Integer> entry : mapaCookie.entrySet()) {
+                            int idProd = entry.getKey();
+                            int cantidad = entry.getValue();
+
+                            Producto p = pdao.getProductoDetalle(idProd);
+                            if (p != null) {
+                                LineaPedido linea = new LineaPedido();
+                                linea.setIdProducto(idProd);
+                                linea.setCantidad(cantidad);
+                                linea.setProductoObj(p);
+                                carritoRecuperado.getLineas().add(linea);
+
+                                subtotal += (p.getPrecio() * cantidad);
+                            }
+                        }
+
+                        // Recalcular importes
+                        if (!carritoRecuperado.getLineas().isEmpty()) {
+                            carritoRecuperado.setImporte(subtotal);
+                            carritoRecuperado.setIva(subtotal * 0.21);
+                            sesion.setAttribute("carrito", carritoRecuperado);
+                        }
+                    }
+                    Utilitis.borrarCookieCarrito(response);
+
+                } else {
+                    // Usuario ANTIGUO: Se borra carrito anterior
+                    Utilitis.borrarCookieCarrito(response);
+                    sesion.removeAttribute("carrito");
+                }
+
+                response.sendRedirect(request.getContextPath() + "/inicio");
+
             } else {
-                // Login incorrecto
                 request.setAttribute("error", "Email o contraseña incorrectos.");
+                request.setAttribute("emailPre", email);
                 request.getRequestDispatcher("/jsp/login.jsp").forward(request, response);
             }
-        } // CASO 3: Si no hay email, es que quieren ver la página (VER FORMULARIO)
-        else {
+
+        } else {
+            request.setAttribute("error", "Por favor, rellene todos los campos.");
             request.getRequestDispatcher("/jsp/login.jsp").forward(request, response);
         }
     }
