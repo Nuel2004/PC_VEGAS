@@ -13,15 +13,44 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+/**
+ * Controlador que gestiona las operaciones del carrito de la compra mediante
+ * peticiones asíncronas (AJAX). Permite incrementar o decrementar cantidades y
+ * devuelve el estado actualizado del carrito en formato JSON.
+ *
+ * * @author manuel
+ */
 @WebServlet(name = "CarritoAjaxController", urlPatterns = {"/CarritoAjaxController"})
 public class CarritoAjaxController extends HttpServlet {
 
+    /**
+     * Redirige las peticiones GET al método doPost.
+     *
+     * * @param request La solicitud HTTP.
+     * @param response La respuesta HTTP.
+     * @throws ServletException Si ocurre un error específico del servlet.
+     * @throws IOException Si ocurre un error de entrada/salida.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doPost(request, response);
     }
 
+    /**
+     * Procesa la modificación de cantidades del carrito vía AJAX. 1. Valida los
+     * parámetros (operación e ID de producto). 2. Localiza la línea de pedido
+     * correspondiente en la sesión. 3. Actualiza la cantidad (sumar o restar) y
+     * recalcula subtotales. 4. Si el usuario es anónimo, actualiza también la
+     * cookie del carrito. 5. Devuelve un objeto JSON con los nuevos totales y
+     * el estado de la línea.
+     *
+     * * @param request La solicitud HTTP con los parámetros 'operacion' y
+     * 'idProducto'.
+     * @param response La respuesta HTTP en formato application/json.
+     * @throws ServletException Si ocurre un error en el servlet.
+     * @throws IOException Si ocurre un error de escritura en la respuesta.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

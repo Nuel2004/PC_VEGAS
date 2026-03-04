@@ -5,18 +5,22 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Representa un pedido realizado por un usuario. Puede actuar como un carrito
+ * de compras temporal (estado 'c') o como un pedido finalizado (estado 'f').
+ *
+ * @author manuel
+ */
 public class Pedido implements Serializable {
 
     private int idPedido;
     private Date fecha;
-    private String estado; // 'c' = carrito, 'f' = finalizado
+    private String estado;
     private int idUsuario;
-    private double importe; // Base imponible
-    private double iva; // Importe del IVA
+    private double importe;
+    private double iva;
 
-    // Lista para contener las líneas del pedido (EL CARRITO)
     private List<LineaPedido> lineas;
-    // Objeto Usuario asociado (útil para ver quién hizo el pedido)
     private Usuario usuarioObj;
 
     public Pedido() {
@@ -29,6 +33,25 @@ public class Pedido implements Serializable {
     // Método auxiliar para calcular totales del carrito en memoria
     public double getTotal() {
         return this.importe + this.iva;
+    }
+
+    /**
+     * NUEVO: Calcula la cantidad total de artículos sumando las cantidades de
+     * cada línea. Útil para mostrar el número real en el icono del carrito del
+     * header.
+     *
+     * @return El número total de unidades físicas en el carrito.
+     */
+    public int getTotalArticulos() {
+        int total = 0;
+        if (this.lineas != null) {
+            for (LineaPedido linea : this.lineas) {
+                if (linea != null) {
+                    total += linea.getCantidad();
+                }
+            }
+        }
+        return total;
     }
 
     // Getters y Setters

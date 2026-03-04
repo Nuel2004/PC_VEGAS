@@ -11,15 +11,42 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * Controlador que gestiona la búsqueda y filtrado de productos vía AJAX.
+ * Permite filtrar por texto, marca, rango de precios y categoría. Devuelve un
+ * fragmento HTML (JSP parcial) con la rejilla de productos resultante.
+ *
+ * * @author manuel
+ */
 @WebServlet(name = "BuscadorAjaxController", urlPatterns = {"/BuscadorAjaxController"})
 public class BuscadorAjaxController extends HttpServlet {
 
+    /**
+     * Redirige GET a POST.
+     *
+     * @param request La solicitud HTTP.
+     * @param response La respuesta HTTP.
+     * @throws ServletException Error en servlet.
+     * @throws IOException Error de E/S.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doPost(request, response);
     }
 
+    /**
+     * Procesa los filtros de búsqueda. 1. Recoge parámetros de búsqueda (texto,
+     * marcas múltiples, precios, categoría). 2. Gestiona valores por defecto
+     * para precios si no se especifican. 3. Invoca al DAO para filtrar la lista
+     * de productos. 4. Retorna el fragmento JSP (`_gridProductos.jsp`) para ser
+     * inyectado en la vista.
+     *
+     * * @param request La solicitud HTTP con parámetros de filtrado.
+     * @param response La respuesta HTTP.
+     * @throws ServletException Error en servlet.
+     * @throws IOException Error de E/S.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

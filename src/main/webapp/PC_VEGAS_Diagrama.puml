@@ -1,0 +1,120 @@
+@startuml
+left to right direction
+skinparam classAttributeIconSize 0
+
+' =========================
+'        BEANS
+' =========================
+package "es.pcvegas.beans" {
+  class Categoria <<Bean>>
+  class Producto <<Bean>>
+  class Usuario <<Bean>>
+  class Pedido <<Bean>>
+  class LineaPedido <<Bean>>
+}
+
+' Relaciones típicas (ajústalas si en tu código es distinto)
+Producto --> Categoria : pertenece a
+LineaPedido --> Producto : referencia
+Pedido --> Usuario : realiza
+Pedido "1" o-- "0..*" LineaPedido : contiene
+
+' =========================
+'          DAO
+' =========================
+package "es.pcvegas.dao" {
+  interface ICategoriasDAO <<Interface>>
+  interface IProductosDAO <<Interface>>
+  interface IUsuariosDAO <<Interface>>
+  interface IPedidosDAO <<Interface>>
+
+  class CategoriasDAO <<DAO>>
+  class ProductosDAO <<DAO>>
+  class UsuariosDAO <<DAO>>
+  class PedidosDAO <<DAO>>
+
+  CategoriasDAO ..|> ICategoriasDAO
+  ProductosDAO ..|> IProductosDAO
+  UsuariosDAO ..|> IUsuariosDAO
+  PedidosDAO ..|> IPedidosDAO
+}
+
+' DAOs trabajan con beans
+CategoriasDAO ..> Categoria
+ProductosDAO ..> Producto
+UsuariosDAO ..> Usuario
+PedidosDAO ..> Pedido
+PedidosDAO ..> LineaPedido
+
+' =========================
+'       DAO FACTORY
+' =========================
+package "es.pcvegas.daofactory" {
+  abstract class DAOFactory
+  class MySQLDAOFactory
+  class ConnectionFactory
+
+  MySQLDAOFactory --|> DAOFactory
+  DAOFactory ..> ConnectionFactory
+  CategoriasDAO ..> ConnectionFactory
+  ProductosDAO ..> ConnectionFactory
+  UsuariosDAO ..> ConnectionFactory
+  PedidosDAO ..> ConnectionFactory
+}
+
+' =========================
+'       CONTROLLERS
+' =========================
+package "es.pcvegas.controllers" {
+  class HomeController <<Servlet>>
+  class LoginController <<Servlet>>
+  class LogoutController <<Servlet>>
+  class RegistroController <<Servlet>>
+  class PerfilController <<Servlet>>
+  class MisPedidosController <<Servlet>>
+  class CarritoController <<Servlet>>
+  class CarritoAjaxController <<Servlet>>
+  class BuscadorAjaxController <<Servlet>>
+  class UsuariosAjaxController <<Servlet>>
+}
+
+' Dependencias típicas (controladores usan DAOs vía factory)
+HomeController ..> DAOFactory
+LoginController ..> DAOFactory
+LogoutController ..> DAOFactory
+RegistroController ..> DAOFactory
+PerfilController ..> DAOFactory
+MisPedidosController ..> DAOFactory
+CarritoController ..> DAOFactory
+CarritoAjaxController ..> DAOFactory
+BuscadorAjaxController ..> DAOFactory
+UsuariosAjaxController ..> DAOFactory
+
+' =========================
+'     FILTER / LISTENER
+' =========================
+package "es.pcvegas.filters" {
+  class UTF8Filter
+}
+
+package "es.pcvegas.listeners" {
+  class InicioAppListener
+}
+
+InicioAppListener ..> DAOFactory
+UTF8Filter ..> "javax.servlet" : usa
+
+' =========================
+'          MODELS
+' =========================
+package "es.pcvegas.models" {
+  class EnumConverter
+  class Utilitis
+}
+
+CarritoController ..> Utilitis
+CarritoAjaxController ..> Utilitis
+BuscadorAjaxController ..> Utilitis
+UsuariosAjaxController ..> Utilitis
+
+@enduml

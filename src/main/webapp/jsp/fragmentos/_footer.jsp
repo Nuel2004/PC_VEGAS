@@ -82,29 +82,10 @@
         </div>
 
         <div class="footer-col">
-            <h3>Enlaces Rápidos</h3>
-            <ul class="footer-links">
-                <li><a href="${pageContext.request.contextPath}/inicio">Inicio</a></li>
-                <li><a href="${pageContext.request.contextPath}/CarritoController">Ver Carrito</a></li>
-
-                <%-- Enlaces condicionales --%>
-                <c:if test="${empty sessionScope.usuario}">
-                    <li><a href="${pageContext.request.contextPath}/login">Iniciar Sesión</a></li>
-                    <li><a href="${pageContext.request.contextPath}/registro">Registrarse</a></li>
-                    </c:if>
-
-                <c:if test="${not empty sessionScope.usuario}">
-                    <li><a href="${pageContext.request.contextPath}/perfil">Mi Perfil</a></li>
-                    <li><a href="${pageContext.request.contextPath}/MisPedidosController">Mis Pedidos</a></li>
-                    </c:if>
-            </ul>
-        </div>
-
-        <div class="footer-col">
             <h3>Contacto</h3>
             <ul class="footer-links">
-                <li>📍 C/ Informática, 42. Madrid</li>
-                <li>📞 91 123 45 67</li>
+                <li>📍 C/ De Arcos, 62 Montijo.</li>
+                <li>📞 649 25 21 25</li>
                 <li>📧 info@pcvegas.es</li>
                 <li>⏰ L-V: 10:00 - 20:00</li>
             </ul>

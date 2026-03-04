@@ -40,8 +40,8 @@
 
         <a href="${pageContext.request.contextPath}/CarritoController" class="cart-btn">
             🛒 Carrito 
-            <c:if test="${not empty sessionScope.carrito and sessionScope.carrito.lineas.size() > 0}">
-                (${sessionScope.carrito.lineas.size()})
+            <c:if test="${not empty sessionScope.carrito and sessionScope.carrito.totalArticulos > 0}">
+                (${sessionScope.carrito.totalArticulos})
             </c:if>
         </a>
     </nav>

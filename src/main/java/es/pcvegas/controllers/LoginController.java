@@ -4,6 +4,7 @@ import es.pcvegas.beans.LineaPedido;
 import es.pcvegas.beans.Pedido;
 import es.pcvegas.beans.Producto;
 import es.pcvegas.beans.Usuario;
+import es.pcvegas.dao.IPedidosDAO;
 import es.pcvegas.dao.IProductosDAO;
 import es.pcvegas.dao.IUsuariosDAO;
 import es.pcvegas.daofactory.DAOFactory;
@@ -17,6 +18,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+/**
+ * Controlador encargado de la autenticación de usuarios. Gestiona la
+ * recuperación del carrito desde Cookie (usuarios nuevos) o desde la Base de
+ * Datos (usuarios recurrentes).
+ *
+ * * @author manuel
+ */
 @WebServlet(name = "LoginController", urlPatterns = {"/LoginController", "/login"})
 public class LoginController extends HttpServlet {
 
@@ -52,7 +60,7 @@ public class LoginController extends HttpServlet {
                 // LOGIN CORRECTO
                 sesion.setAttribute("usuario", usuarioValidado);
 
-                // --- GESTIÓN DEL CARRITO (COOKIE -> SESIÓN) ---
+                // --- GESTIÓN DEL CARRITO ---
                 if (usuarioValidado.getUltimoAcceso() == null) {
                     // Usuario NUEVO: Intentamos recuperar carrito de cookie
                     Map<Integer, Integer> mapaCookie = Utilitis.leerCookieCarrito(request);
@@ -91,9 +99,31 @@ public class LoginController extends HttpServlet {
                     Utilitis.borrarCookieCarrito(response);
 
                 } else {
-                    // Usuario ANTIGUO: Se borra carrito anterior
-                    Utilitis.borrarCookieCarrito(response);
-                    sesion.removeAttribute("carrito");
+                    // Usuario ANTIGUO: Intentamos recuperar su carrito de la BD
+                    Utilitis.borrarCookieCarrito(response); // Borramos cookie para que no interfiera
+
+                    IPedidosDAO pdao = daof.getPedidosDAO();
+
+                    // Buscamos si tiene un pedido en estado 'c' guardado
+                    Pedido carritoBD = pdao.getPedidoEnCurso(usuarioValidado.getIdUsuario());
+
+                    if (carritoBD != null && !carritoBD.getLineas().isEmpty()) {
+                        // ¡Lo encontramos! Lo metemos en la sesión
+                        // Recalculamos totales por seguridad
+                        double subtotal = 0.0;
+                        for (LineaPedido l : carritoBD.getLineas()) {
+                            if (l.getProductoObj() != null) {
+                                subtotal += l.getProductoObj().getPrecio() * l.getCantidad();
+                            }
+                        }
+                        carritoBD.setImporte(subtotal);
+                        carritoBD.setIva(subtotal * 0.21);
+
+                        sesion.setAttribute("carrito", carritoBD);
+                    } else {
+                        // Si no tiene nada en BD, limpiamos la sesión por si acaso
+                        sesion.removeAttribute("carrito");
+                    }
                 }
 
                 response.sendRedirect(request.getContextPath() + "/inicio");

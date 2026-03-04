@@ -44,3 +44,45 @@ window.onclick = function (event) {
         cerrarModal();
     }
 };
+// Función para añadir al carrito de forma asíncrona (AJAX)
+function agregarAlCarritoAjax(idProducto) {
+    // 1. Preparamos los parámetros (operación=add y el id)
+    let params = new URLSearchParams();
+    params.append("operacion", "add"); // Ahora usamos operacion=add en lugar de accion=add
+    params.append("idProducto", idProducto);
+
+    // 2. Enviamos la petición directamente a tu CarritoAjaxController
+    fetch('CarritoAjaxController', {
+        method: 'POST',
+        body: params
+    })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    // 3. Actualizamos el span del contador en el menú superior
+                    const spanContador = document.getElementById("contador-carrito");
+                    if (spanContador) {
+                        // Actualiza el número (usando data.totalArticulos que devuelve tu JSON)
+                        spanContador.innerText = "(" + data.totalArticulos + ")";
+
+                        // Animación visual (el número hace un zoom y se pone verde)
+                        spanContador.style.display = "inline-block";
+                        spanContador.style.transition = "all 0.3s";
+                        spanContador.style.color = "#2ecc71";
+                        spanContador.style.transform = "scale(1.3)";
+
+                        setTimeout(() => {
+                            spanContador.style.color = "";
+                            spanContador.style.transform = "scale(1)";
+                        }, 400);
+                    }
+
+                    // Cerramos el modal
+                    if (typeof cerrarModal === 'function') {
+                        cerrarModal();
+                    }
+                }
+            })
+            .catch(error => console.error('Error al añadir al carrito:', error));
+}
+

@@ -9,8 +9,19 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Implementación JDBC de IProductosDAO. Gestiona las consultas complejas y
+ * filtrados sobre la tabla 'productos'.
+ *
+ * * @author manuel
+ */
 public class ProductosDAO implements IProductosDAO {
 
+    /**
+     * Obtiene la lista completa de productos.
+     *
+     * * @return Lista de productos.
+     */
     @Override
     public List<Producto> getProductos() {
         List<Producto> lista = new ArrayList<>();
@@ -46,6 +57,12 @@ public class ProductosDAO implements IProductosDAO {
         return lista;
     }
 
+    /**
+     * Recupera productos filtrados por su categoría.
+     *
+     * * @param idCategoria ID de la categoría.
+     * @return Lista de productos.
+     */
     @Override
     public List<Producto> getProductosPorCategoria(int idCategoria) {
         List<Producto> lista = new ArrayList<>();
@@ -80,12 +97,20 @@ public class ProductosDAO implements IProductosDAO {
         return lista;
     }
 
-    // Puedes implementar getProductosOferta() y getProductoDetalle() de forma similar
+    /**
+     * Pendiente de implementación.
+     */
     @Override
     public List<Producto> getProductosOferta() {
         return new ArrayList<>(); // Pendiente de implementación
     }
 
+    /**
+     * Obtiene el detalle de un producto por su ID.
+     *
+     * * @param idProducto ID del producto.
+     * @return Objeto Producto o null.
+     */
     @Override
     public Producto getProductoDetalle(int idProducto) {
         Producto p = null;
@@ -136,6 +161,11 @@ public class ProductosDAO implements IProductosDAO {
         }
     }
 
+    /**
+     * Obtiene productos aleatorios utilizando ORDER BY RAND().
+     *
+     * * @return Lista de 9 productos aleatorios.
+     */
     @Override
     public List<Producto> getProductosAleatorios() {
         List<Producto> lista = new ArrayList<>();
@@ -170,6 +200,11 @@ public class ProductosDAO implements IProductosDAO {
         return lista;
     }
 
+    /**
+     * Obtiene las marcas distintas presentes en la tabla productos.
+     *
+     * * @return Lista de nombres de marcas.
+     */
     @Override
     public java.util.List<String> getMarcas() {
         java.util.List<String> marcas = new java.util.ArrayList<>();
@@ -195,6 +230,11 @@ public class ProductosDAO implements IProductosDAO {
         return marcas;
     }
 
+    /**
+     * Obtiene el precio mínimo y máximo de los productos.
+     *
+     * * @return Array double[] donde [0]=min y [1]=max.
+     */
     @Override
     public double[] getRangoPrecios() {
         // Por defecto devolvemos 0 y 10000 por si la tienda estuviera vacía
@@ -222,6 +262,16 @@ public class ProductosDAO implements IProductosDAO {
         return rango;
     }
 
+    /**
+     * Construye una consulta SQL dinámica para filtrar productos.
+     *
+     * * @param busqueda Texto para nombre (LIKE).
+     * @param marcas Array de marcas (IN clause).
+     * @param precioMin Límite inferior de precio.
+     * @param precioMax Límite superior de precio.
+     * @param idCategoria Categoría específica (o null).
+     * @return Lista de productos filtrados.
+     */
     @Override
     public List<Producto> filtrarProductos(String busqueda, String[] marcas, double precioMin, double precioMax, Integer idCategoria) {
         List<Producto> lista = new ArrayList<>();
@@ -302,5 +352,4 @@ public class ProductosDAO implements IProductosDAO {
 
         return lista;
     }
-
 }

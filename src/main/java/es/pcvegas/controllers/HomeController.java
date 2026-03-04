@@ -13,15 +13,41 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * Controlador de la página de inicio (Landing Page). Se encarga de: 1.
+ * Recuperar el carrito almacenado en cookies si el usuario es anónimo. 2.
+ * Cargar una lista de productos aleatorios para mostrar en el escaparate.
+ *
+ * * @author manuel
+ */
 @WebServlet(name = "HomeController", urlPatterns = {"/inicio"})
 public class HomeController extends HttpServlet {
 
+    /**
+     * Redirige las peticiones GET al método doPost.
+     *
+     * * @param request La solicitud HTTP.
+     * @param response La respuesta HTTP.
+     * @throws ServletException Si ocurre un error en el servlet.
+     * @throws IOException Si ocurre un error de E/S.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doPost(request, response);
     }
 
+    /**
+     * Ejecuta la lógica de carga inicial de la tienda. Comprueba si existen
+     * cookies de carrito para usuarios no logueados y reconstruye el objeto
+     * Pedido en sesión. Finalmente, obtiene productos aleatorios y redirige a
+     * la vista.
+     *
+     * * @param request La solicitud HTTP.
+     * @param response La respuesta HTTP.
+     * @throws ServletException Si ocurre un error en el servlet.
+     * @throws IOException Si ocurre un error de E/S.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -44,7 +70,7 @@ public class HomeController extends HttpServlet {
 
                 carrito = new es.pcvegas.beans.Pedido();
                 carrito.setLineas(new ArrayList<LineaPedido>());
-                
+
                 for (java.util.Map.Entry<Integer, Integer> entry : mapa.entrySet()) {
                     int idProducto = entry.getKey();
                     int cantidad = entry.getValue();

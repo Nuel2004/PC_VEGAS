@@ -10,9 +10,26 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
+/**
+ * Listener que se ejecuta al arrancar la aplicación web. Su función principal
+ * es precargar datos estáticos o de configuración (categorías, marcas, rangos
+ * de precio) y almacenarlos en el ámbito de aplicación (ServletContext) para
+ * que estén disponibles en todas las vistas JSP sin necesidad de consultarlos
+ * repetidamente en cada petición.
+ *
+ * * @author manuel
+ */
 @WebListener
 public class InicioAppListener implements ServletContextListener {
 
+    /**
+     * Método ejecutado al inicializar el contexto de la aplicación. Conecta a
+     * la base de datos, recupera listas maestras y las guarda como atributos de
+     * contexto. Incluye manejo de errores robusto para evitar que un fallo en
+     * la BD impida el despliegue de Tomcat.
+     *
+     * * @param sce Evento del contexto del servlet.
+     */
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         System.out.println("--- INICIANDO CARGA DE DATOS DE CONTEXTO ---");
@@ -68,6 +85,12 @@ public class InicioAppListener implements ServletContextListener {
         sce.getServletContext().setAttribute("precioMaximo", rangoPrecios[1]);
     }
 
+    /**
+     * Método ejecutado al detener la aplicación. Lugar apropiado para cerrar
+     * recursos globales o limpiar hilos.
+     *
+     * * @param sce Evento del contexto del servlet.
+     */
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         // Aquí podríamos poner el código para limpiar el hilo de MySQL que dejaba el "Memory Leak", 

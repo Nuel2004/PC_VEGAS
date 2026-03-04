@@ -9,8 +9,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
+/**
+ * Implementación JDBC de IUsuariosDAO. Maneja el ciclo de vida del usuario en
+ * la BD (login, registro, updates).
+ *
+ * * @author manuel
+ */
 public class UsuariosDAO implements IUsuariosDAO {
 
+    /**
+     * Verifica credenciales contra la tabla usuarios.
+     *
+     * * @param email Email del usuario.
+     * @param passwordMD5 Hash de la contraseña.
+     * @return Usuario logueado o null.
+     */
     @Override
     public Usuario login(String email, String passwordMD5) {
         Connection cn = null;
@@ -37,6 +50,12 @@ public class UsuariosDAO implements IUsuariosDAO {
         return u;
     }
 
+    /**
+     * Inserta un nuevo registro de usuario. Recupera el ID autogenerado.
+     *
+     * * @param u Objeto Usuario con datos.
+     * @return ID del usuario nuevo.
+     */
     @Override
     public int registrar(Usuario u) {
         int id = -1;
@@ -78,6 +97,12 @@ public class UsuariosDAO implements IUsuariosDAO {
     }
 
     // --- IMPLEMENTACIÓN DE LOS MÉTODOS QUE FALTABAN ---
+    /**
+     * Recupera un usuario por su email.
+     *
+     * * @param email El email a buscar.
+     * @return El usuario encontrado o null.
+     */
     @Override
     public Usuario getUsuarioPorEmail(String email) {
         Usuario u = null;
@@ -101,6 +126,13 @@ public class UsuariosDAO implements IUsuariosDAO {
         return u;
     }
 
+    /**
+     * Actualiza únicamente el campo avatar.
+     *
+     * * @param idUsuario ID del usuario.
+     * @param nombreArchivo Nuevo nombre de imagen.
+     * @return True en caso de éxito.
+     */
     @Override
     public boolean actualizarAvatar(int idUsuario, String nombreArchivo) {
         boolean exito = false;
@@ -122,6 +154,13 @@ public class UsuariosDAO implements IUsuariosDAO {
         return exito;
     }
 
+    /**
+     * Actualiza los datos del perfil y opcionalmente el avatar.
+     *
+     * * @param u Usuario con datos nuevos.
+     * @param nuevoAvatar Nombre del nuevo avatar (si es null, se ignora).
+     * @return True en caso de éxito.
+     */
     @Override
     public boolean actualizarPerfil(Usuario u, String nuevoAvatar) {
         boolean exito = false;
@@ -163,6 +202,11 @@ public class UsuariosDAO implements IUsuariosDAO {
         return exito;
     }
 
+    /**
+     * Borra físicamente un usuario de la BD.
+     *
+     * * @param idusuario ID a borrar.
+     */
     @Override
     public void eliminar(int idusuario) {
         Connection cn = null;
@@ -180,6 +224,12 @@ public class UsuariosDAO implements IUsuariosDAO {
         }
     }
 
+    /**
+     * Actualiza el timestamp de último acceso.
+     *
+     * * @param idusuario ID del usuario.
+     * @param fecha Fecha util.Date a convertir a SQL Timestamp.
+     */
     @Override
     public void actualizarUltimoAcceso(int idusuario, Date fecha) {
         Connection cn = null;
@@ -199,7 +249,14 @@ public class UsuariosDAO implements IUsuariosDAO {
         }
     }
 
-    // Método auxiliar para no repetir código de mapeo
+    /**
+     * Método auxiliar para mapear ResultSet a objeto Usuario. Evita duplicidad
+     * de código.
+     *
+     * * @param rs ResultSet posicionado.
+     * @return Objeto Usuario hidratado.
+     * @throws SQLException Si hay error de acceso.
+     */
     private Usuario mapearUsuario(ResultSet rs) throws SQLException {
         Usuario u = new Usuario();
         u.setIdUsuario(rs.getInt("idusuario"));

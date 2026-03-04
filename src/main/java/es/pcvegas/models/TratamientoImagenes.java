@@ -9,11 +9,26 @@ import java.io.InputStream;
 import javax.imageio.ImageIO;
 import javax.servlet.http.Part;
 
+/**
+ * Clase de utilidad para la manipulación y procesamiento de imágenes. Se
+ * encarga principalmente de redimensionar los avatares de usuario para mantener
+ * un tamaño uniforme en la aplicación.
+ *
+ * * @author manuel
+ */
 public class TratamientoImagenes {
 
     /**
-     * Redimensiona la imagen y la guarda en la carpeta especificada. Devuelve
-     * true si todo ha ido bien, o false si hubo algún fallo.
+     * Procesa un archivo subido (Part), lo redimensiona a 100x100 píxeles y lo
+     * guarda en disco. Utiliza las librerías gráficas de AWT (BufferedImage,
+     * Graphics2D).
+     *
+     * * @param part El objeto Part que contiene el archivo subido.
+     * @param rutaDirectorio Ruta del sistema de archivos donde se guardará la
+     * imagen.
+     * @param nombreFinal Nombre del archivo destino (incluyendo extensión
+     * .jpg).
+     * @return true si la operación fue exitosa, false si hubo error.
      */
     public static boolean guardarAvatar(Part part, String rutaDirectorio, String nombreFinal) {
         try (InputStream input = part.getInputStream()) {
@@ -30,8 +45,8 @@ public class TratamientoImagenes {
             g2d.dispose();
 
             // 3. Guardar el archivo final (.jpg)
-            File directorio = new File(rutaDirectorio);            
-            
+            File directorio = new File(rutaDirectorio);
+
             File archivoFinal = new File(directorio, nombreFinal);
             ImageIO.write(bufferedEscalada, "jpg", archivoFinal);
 

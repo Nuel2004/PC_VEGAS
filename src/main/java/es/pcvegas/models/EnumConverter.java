@@ -4,10 +4,24 @@ import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.beanutils.Converter;
 
 /**
- * Convierte Strings a Enums automáticamente para BeanUtils
+ * Clase utilitaria para Apache Commons BeanUtils. Permite la conversión
+ * automática de valores String (provenientes de formularios HTML) a tipos
+ * Enumerados (Enum) en los Java Beans.
+ *
+ * * @author manuel
  */
 public class EnumConverter implements Converter {
 
+    /**
+     * Convierte un objeto de entrada (generalmente String) al tipo Enum
+     * destino.
+     *
+     * * @param type La clase del Enum destino.
+     * @param o El objeto valor a convertir.
+     * @return El valor Enum correspondiente.
+     * @throws ConversionException Si el valor no coincide con ninguna constante
+     * del Enum.
+     */
     @Override
     public Object convert(Class type, Object o) {
         if (o == null) {

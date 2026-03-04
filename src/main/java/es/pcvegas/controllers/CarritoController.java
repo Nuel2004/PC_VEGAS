@@ -17,15 +17,49 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+/**
+ * Controlador principal para la gestión del carrito de compras (flujo
+ * síncrono). Maneja las acciones de añadir productos, actualizar cantidades,
+ * eliminar líneas y tramitar el pedido final.
+ *
+ * * @author manuel
+ */
 @WebServlet(name = "CarritoController", urlPatterns = {"/CarritoController", "/carrito"})
 public class CarritoController extends HttpServlet {
 
+    /**
+     * Redirige las peticiones GET al método doPost.
+     *
+     * * @param request La solicitud HTTP.
+     * @param response La respuesta HTTP.
+     * @throws ServletException Si ocurre un error en el servlet.
+     * @throws IOException Si ocurre un error de E/S.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doPost(request, response);
     }
 
+    /**
+     * Procesa las distintas acciones sobre el carrito según el parámetro
+     * 'accion'.
+     * <ul>
+     * <li><b>add:</b> Añade un producto al carrito. Si ya existe, suma la
+     * cantidad.</li>
+     * <li><b>actualizar:</b> Modifica la cantidad de un producto (+/-).</li>
+     * <li><b>eliminar:</b> Elimina una línea completa del carrito.</li>
+     * <li><b>tramitar:</b> Finaliza la compra, guarda el pedido en BD y vacía
+     * el carrito.</li>
+     * </ul>
+     * También se encarga de sincronizar el carrito en la Cookie si el usuario
+     * es anónimo.
+     *
+     * * @param request La solicitud HTTP con el parámetro 'accion'.
+     * @param response La respuesta HTTP.
+     * @throws ServletException Si ocurre un error en el servlet.
+     * @throws IOException Si ocurre un error de E/S.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -163,6 +197,12 @@ public class CarritoController extends HttpServlet {
         }
     }
 
+    /**
+     * Método auxiliar para recalcular el importe total y el IVA del pedido. Se
+     * invoca cada vez que se modifica el contenido del carrito.
+     *
+     * * @param carrito El objeto Pedido a recalcular.
+     */
     private void recalcularTotales(Pedido carrito) {
         double subtotal = 0.0;
         for (LineaPedido linea : carrito.getLineas()) {

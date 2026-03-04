@@ -14,6 +14,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
+/**
+ * Controlador del perfil de usuario.
+ * <p>
+ * Esta clase está anotada con {@code @MultipartConfig} para permitir subida de ficheros.
+ * </p>
+ */
 @WebServlet(name = "PerfilController", urlPatterns = {"/PerfilController", "/perfil"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
@@ -22,6 +28,15 @@ import javax.servlet.http.Part;
 )
 public class PerfilController extends HttpServlet {
 
+    /**
+     * Muestra el formulario de edición de perfil. Verifica que exista sesión
+     * activa.
+     *
+     * * @param request La solicitud HTTP.
+     * @param response La respuesta HTTP.
+     * @throws ServletException Si ocurre un error en el servlet.
+     * @throws IOException Si ocurre un error de E/S.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -34,6 +49,16 @@ public class PerfilController extends HttpServlet {
         request.getRequestDispatcher("/jsp/perfil.jsp").forward(request, response);
     }
 
+    /**
+     * Procesa la actualización de datos del perfil. 1. Recoge los parámetros de
+     * texto. 2. Procesa la subida del fichero de avatar (si existe). 3.
+     * Actualiza el objeto usuario en sesión y en base de datos.
+     *
+     * * @param request La solicitud HTTP (Multipart).
+     * @param response La respuesta HTTP.
+     * @throws ServletException Si ocurre un error en el servlet.
+     * @throws IOException Si ocurre un error de E/S.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

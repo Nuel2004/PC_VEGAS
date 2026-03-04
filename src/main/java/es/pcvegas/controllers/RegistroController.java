@@ -14,6 +14,14 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import org.apache.commons.beanutils.BeanUtils;
 
+/**
+ * Controlador encargado del registro de nuevos usuarios. Maneja tanto la
+ * validación asíncrona de email (AJAX) como el proceso completo de alta,
+ * incluyendo subida de imagen, cálculo de NIF y validación de contraseñas.
+ * Incluye gestión de transacciones manual (rollback si falla la imagen).
+ *
+ * * @author manuel
+ */
 @WebServlet(name = "RegistroController", urlPatterns = {"/RegistroController", "/registro"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
@@ -22,6 +30,14 @@ import org.apache.commons.beanutils.BeanUtils;
 )
 public class RegistroController extends HttpServlet {
 
+    /**
+     * Muestra el formulario de registro.
+     *
+     * * @param request La solicitud HTTP.
+     * @param response La respuesta HTTP.
+     * @throws ServletException Si ocurre un error en el servlet.
+     * @throws IOException Si ocurre un error de E/S.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -29,6 +45,19 @@ public class RegistroController extends HttpServlet {
         request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
     }
 
+    /**
+     * Procesa la solicitud de registro o validación. Si accion ==
+     * "comprobarEmail", devuelve estado de disponibilidad (AJAX). Si no,
+     * realiza el registro completo: 1. Parsea parámetros con BeanUtils. 2.
+     * Valida coincidencia de contraseñas y calcula letra NIF. 3. Inserta
+     * usuario en BD. 4. Guarda avatar y actualiza BD. 5. Realiza rollback
+     * manual (borrado) si falla la subida de imagen.
+     *
+     * * @param request La solicitud HTTP.
+     * @param response La respuesta HTTP.
+     * @throws ServletException Si ocurre un error en el servlet.
+     * @throws IOException Si ocurre un error de E/S.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

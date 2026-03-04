@@ -8,11 +8,23 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Implementación JDBC de IPedidosDAO. Gestiona transacciones para registrar
+ * pedidos completos y consultas sobre tablas 'pedidos' y 'lineaspedidos'.
+ *
+ * * @author manuel
+ */
 public class PedidosDAO implements IPedidosDAO {
 
     private static final String ESTADO_CARRITO = "c";
     private static final String ESTADO_FINAL = "f";
 
+    /**
+     * Inserta un nuevo registro en la tabla pedidos con estado 'c' (carrito).
+     *
+     * * @param pedido El pedido a crear.
+     * @return El ID generado.
+     */
     @Override
     public int crearPedido(Pedido pedido) {
         int idGenerado = -1;
@@ -39,6 +51,12 @@ public class PedidosDAO implements IPedidosDAO {
         return idGenerado;
     }
 
+    /**
+     * Modifica el estado de un pedido existente.
+     *
+     * * @param idPedido ID del pedido.
+     * @param estado Nuevo estado.
+     */
     @Override
     public void actualizarEstado(int idPedido, String estado) {
         String sql = "UPDATE pedidos SET estado = ? WHERE idpedido = ?";
@@ -54,6 +72,13 @@ public class PedidosDAO implements IPedidosDAO {
         }
     }
 
+    /**
+     * Busca el carrito activo del usuario (pedido con estado 'c'). Recalcula y
+     * carga sus líneas asociadas.
+     *
+     * * @param idUsuario ID del usuario.
+     * @return El Pedido en curso o null.
+     */
     @Override
     public Pedido getPedidoEnCurso(int idUsuario) {
         Pedido pedido = null;
@@ -90,6 +115,11 @@ public class PedidosDAO implements IPedidosDAO {
         return pedido;
     }
 
+    /**
+     * Finaliza un pedido estableciendo importes y cambiando estado a 'f'.
+     *
+     * * @param pedido El pedido a cerrar.
+     */
     @Override
     public void cerrarPedido(Pedido pedido) {
         // Cierra el pedido: actualiza importes + estado final
@@ -108,6 +138,11 @@ public class PedidosDAO implements IPedidosDAO {
         }
     }
 
+    /**
+     * Añade una línea individual a la tabla lineaspedidos.
+     *
+     * * @param linea La línea a insertar.
+     */
     @Override
     public void agregarLinea(LineaPedido linea) {
         String sql = "INSERT INTO lineaspedidos (idpedido, idproducto, cantidad) VALUES (?, ?, ?)";
@@ -124,6 +159,11 @@ public class PedidosDAO implements IPedidosDAO {
         }
     }
 
+    /**
+     * Elimina una línea por su ID.
+     *
+     * * @param idLinea ID de la línea.
+     */
     @Override
     public void eliminarLinea(int idLinea) {
         String sql = "DELETE FROM lineaspedidos WHERE idlinea = ?";
@@ -138,6 +178,11 @@ public class PedidosDAO implements IPedidosDAO {
         }
     }
 
+    /**
+     * Borra todas las líneas de un pedido.
+     *
+     * * @param idPedido ID del pedido.
+     */
     @Override
     public void vaciarLineas(int idPedido) {
         String sql = "DELETE FROM lineaspedidos WHERE idpedido = ?";
@@ -152,6 +197,13 @@ public class PedidosDAO implements IPedidosDAO {
         }
     }
 
+    /**
+     * Recupera las líneas de un pedido realizando un JOIN con productos para
+     * obtener datos descriptivos (nombre, imagen, etc.).
+     *
+     * * @param idPedido ID del pedido.
+     * @return Lista de LineaPedido hidratada con objetos Producto.
+     */
     @Override
     public List<LineaPedido> getLineasPedido(int idPedido) {
         List<LineaPedido> lineas = new ArrayList<>();
@@ -196,6 +248,14 @@ public class PedidosDAO implements IPedidosDAO {
     // ----------------------------------------------------------------------
     // REGISTRAR PEDIDO (TRANSACCIÓN) -> INSERT pedidos + INSERT lineaspedidos
     // ----------------------------------------------------------------------
+    /**
+     * Registra un pedido completo en una transacción atómica. Inserta la
+     * cabecera en 'pedidos' y luego recorre la lista para insertar en
+     * 'lineaspedidos'. Si algo falla, realiza rollback.
+     *
+     * * @param carrito Objeto Pedido con sus líneas.
+     * @return ID del pedido creado.
+     */
     @Override
     public int registrarPedido(Pedido carrito) {
 
@@ -313,11 +373,19 @@ public class PedidosDAO implements IPedidosDAO {
             }
         }
     }
+
+    /**
+     * Recupera todos los pedidos históricos de un usuario. Carga también las
+     * líneas de cada pedido.
+     *
+     * * @param idUsuario ID del usuario.
+     * @return Lista de pedidos.
+     */
     @Override
     public java.util.List<Pedido> getPedidosUsuario(int idUsuario) {
         java.util.List<Pedido> lista = new java.util.ArrayList<>();
         String sql = "SELECT * FROM pedidos WHERE idusuario = ? ORDER BY fecha DESC";
-        
+
         Connection conexion = null;
         PreparedStatement preparada = null;
         ResultSet rs = null;
@@ -336,11 +404,11 @@ public class PedidosDAO implements IPedidosDAO {
                 p.setIdUsuario(rs.getInt("idusuario"));
                 p.setImporte(rs.getDouble("importe"));
                 p.setIva(rs.getDouble("iva"));
-                
+
                 // ¡IMPORTANTE! Cargamos los productos de este pedido para poder pintarlos
                 // Reutilizamos el método que ya tienes en esta misma clase
                 p.setLineas(this.getLineasPedido(p.getIdPedido()));
-                
+
                 lista.add(p);
             }
         } catch (SQLException e) {
