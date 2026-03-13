@@ -31,61 +31,60 @@
                 border-radius: 4px;
                 box-sizing: border-box;
             }
+
+            /* Input Readonly visualmente distinto */
             .form-group input[readonly] {
                 background-color: #f0f0f0;
                 color: #777;
                 cursor: not-allowed;
                 border-color: #eee;
             }
+
             .btn-guardar {
                 width: 100%;
                 padding: 12px;
-                background-color: #27ae60;
+                background-color: #111;
                 color: white;
                 border: none;
                 border-radius: 4px;
-                font-size: 1.1em;
+                font-size: 1em;
                 cursor: pointer;
                 transition: background 0.3s;
             }
             .btn-guardar:hover {
-                background-color: #2ecc71;
+                background-color: #333;
             }
-            .avatar-preview {
+
+            /* Estilos Avatar */
+            .profile-avatar-section {
                 text-align: center;
-                margin-bottom: 20px;
+                margin-bottom: 30px;
             }
-            .avatar-img {
+            .avatar-big {
                 width: 120px;
                 height: 120px;
                 border-radius: 50%;
                 object-fit: cover;
-                border: 4px solid #3498db;
+                border: 4px solid #eee;
+                margin-bottom: 10px;
             }
-            .alert {
-                padding: 15px;
-                margin-bottom: 20px;
+
+            /* Alertas Backend */
+            .alert-success {
+                background: #d4edda;
+                color: #155724;
+                padding: 10px;
                 border-radius: 4px;
+                margin-bottom: 20px;
                 text-align: center;
             }
-            .alert-success {
-                background-color: #d4edda;
-                color: #155724;
-                border: 1px solid #c3e6cb;
-            }
             .alert-error {
-                background-color: #f8d7da;
+                background: #f8d7da;
                 color: #721c24;
-                border: 1px solid #f5c6cb;
-            }
-            .label-upload {
-                cursor: pointer;
-                color: #3498db;
-                text-decoration: underline;
-                display: inline-block;
-            }
-            .label-upload:hover {
-                color: #2980b9;
+                padding: 10px;
+                border-radius: 4px;
+                margin-bottom: 20px;
+                text-align: center;
             }
         </style>
     </head>
@@ -94,52 +93,58 @@
         <jsp:include page="/jsp/fragmentos/_header.jsp" />
 
         <div class="profile-container">
-            <h2 style="text-align:center; color:#333;">Editar Mi Perfil</h2>
+            <h2 style="text-align: center; margin-bottom: 30px;">Editar Perfil</h2>
 
-            <c:if test="${not empty mensajeExito}"><div class="alert alert-success">${mensajeExito}</div></c:if>
-            <c:if test="${not empty mensajeError}"><div class="alert alert-error">${mensajeError}</div></c:if>
+            <c:if test="${not empty mensajeExito}">
+                <div class="alert-success">${mensajeExito}</div>
+            </c:if>
+            <c:if test="${not empty mensajeError}">
+                <div class="alert-error">${mensajeError}</div>
+            </c:if>
 
-                <div class="avatar-preview">
+            <form id="formPerfil" action="${pageContext.request.contextPath}/PerfilController" method="post" enctype="multipart/form-data">
+
+                <div class="profile-avatar-section">
                     <img id="imgPreview" src="${pageContext.request.contextPath}/img/${sessionScope.usuario.avatar}" 
-                         onerror="this.src='${pageContext.request.contextPath}/img/default.jpg'" class="avatar-img">
-            </div>
-
-            <form action="${pageContext.request.contextPath}/PerfilController" method="post" enctype="multipart/form-data">
-
-                <div class="form-group" style="text-align: center;">
-                    <label for="ficheroAvatar" class="label-upload">Cambiar foto de perfil</label>
-                    <input type="file" id="ficheroAvatar" name="ficheroAvatar" accept="image/*" style="display: none;">
-                    <small id="avisoFoto" style="display:none; color: #27ae60; margin-top: 5px;">¡Nueva imagen seleccionada!</small>
+                         alt="Avatar" class="avatar-big"
+                         onerror="this.src='${pageContext.request.contextPath}/img/default.jpg'">
+                    <br>
+                    <label for="newAvatar" style="cursor: pointer; color: #3498db; font-weight: bold;">
+                        📸 Cambiar foto de perfil
+                    </label>
+                    <input type="file" id="newAvatar" name="ficheroAvatar" accept="image/*" style="display: none;">
+                    <br>
+                    <small id="avisoFoto" style="display:none; color: green; margin-top: 5px;">Imagen seleccionada</small>
                 </div>
 
                 <div class="form-group">
-                    <label>Email (No editable)</label>
-                    <input type="email" name="email" value="${sessionScope.usuario.email}" readonly title="El email no se puede cambiar por seguridad">
+                    <label>Correo Electrónico (No modificable)</label>
+                    <input type="email" value="${sessionScope.usuario.email}" readonly>
                 </div>
 
                 <div class="form-group">
-                    <label>NIF / DNI (No editable)</label>
-                    <input type="text" id="nif" name="nif" value="${sessionScope.usuario.nif}" readonly title="El NIF no se puede modificar">
+                    <label for="nombre">Nombre *</label>
+                    <input type="text" id="nombre" name="nombre" value="${sessionScope.usuario.nombre}" placeholder="Tu nombre">
                 </div>
 
                 <div class="form-group">
-                    <label for="nombre">Nombre</label>
-                    <input type="text" id="nombre" name="nombre" value="${sessionScope.usuario.nombre}" required>
+                    <label for="apellidos">Apellidos *</label>
+                    <input type="text" id="apellidos" name="apellidos" value="${sessionScope.usuario.apellidos}" placeholder="Tus apellidos">
                 </div>
 
                 <div class="form-group">
-                    <label for="apellidos">Apellidos</label>
-                    <input type="text" id="apellidos" name="apellidos" value="${sessionScope.usuario.apellidos}" required>
+                    <label for="nif">NIF / DNI (No modificable)</label>
+                    <input type="text" id="nif" name="nif" value="${sessionScope.usuario.nif}" placeholder="12345678Z" readonly>
                 </div>
 
                 <div class="form-group">
-                    <label for="telefono">Teléfono</label>
-                    <input type="text" id="telefono" name="telefono" value="${sessionScope.usuario.telefono}">
+                    <label for="telefono">Teléfono *</label>
+                    <input type="tel" id="telefono" name="telefono" value="${sessionScope.usuario.telefono}" placeholder="600000000">
                 </div>
 
                 <div class="form-group">
-                    <label for="direccion">Dirección</label>
-                    <input type="text" id="direccion" name="direccion" value="${sessionScope.usuario.direccion}">
+                    <label for="direccion">Dirección *</label>
+                    <input type="text" id="direccion" name="direccion" value="${sessionScope.usuario.direccion}" placeholder="Calle Ejemplo, 123">
                 </div>
 
                 <div class="form-group">
@@ -165,8 +170,8 @@
 
         <jsp:include page="/jsp/fragmentos/_footer.jsp" />
 
-        <script src="${pageContext.request.contextPath}/js/validacion.js"></script>
         <script src="${pageContext.request.contextPath}/js/preview_avatar.js"></script>
 
+        <script src="${pageContext.request.contextPath}/js/validacion.js"></script>
     </body>
 </html>

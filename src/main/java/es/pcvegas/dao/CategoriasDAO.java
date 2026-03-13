@@ -59,7 +59,6 @@ public class CategoriasDAO implements ICategoriasDAO {
      */
     @Override
     public void close() {
-        // Implementación opcional si se requiere cierre manual específico
     }
 
     /**

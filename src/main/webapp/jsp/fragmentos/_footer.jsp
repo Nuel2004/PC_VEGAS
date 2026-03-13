@@ -26,7 +26,7 @@
     }
 
     .footer-col h3 {
-        color: #3498db; /* Azul más claro para títulos */
+        color: #3498db; 
         font-size: 1.2em;
         margin-bottom: 20px;
         border-bottom: 2px solid #3498db;

@@ -1,0 +1,64 @@
+@startuml
+
+package "es.pcvegas.beans" {
+    class Usuario {
+        - int idUsuario
+        - String email
+        - String password
+        - String nif
+        - String nombre
+        - String apellidos
+        - String direccion
+        - String avatar
+        + getNombre()
+        + setNombre()
+    }
+
+    class Producto {
+        - int idProducto
+        - int idCategoria
+        - String nombre
+        - double precio
+        - String imagen
+        + getPrecio()
+    }
+
+    class Pedido {
+        - int idPedido
+        - Date fecha
+        - String estado
+        - double importe
+        - List<LineaPedido> lineas
+        + getTotal()
+    }
+
+    class LineaPedido {
+        - int idLinea
+        - int idPedido
+        - int cantidad
+        - Producto productoObj
+    }
+    
+    class Categoria {
+        - int idCategoria
+        - String nombre
+    }
+}
+
+package "es.pcvegas.dao" {
+    interface IUsuariosDAO
+    interface IProductosDAO
+    interface IPedidosDAO
+    
+    class MySQLDAOFactory
+}
+
+' Relaciones
+Usuario "1" -- "0..*" Pedido : realiza >
+Pedido "1" *-- "1..*" LineaPedido : contiene >
+LineaPedido "1" -- "1" Producto : referencia >
+Producto "1" -- "1" Categoria : pertenece >
+MySQLDAOFactory ..|> IUsuariosDAO : implementa
+MySQLDAOFactory ..|> IProductosDAO : implementa
+
+@enduml

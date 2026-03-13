@@ -50,8 +50,9 @@
                     <div class="form-group">
                         <label for="nif_numeros">NIF / DNI *</label>
                         <div style="display: flex; gap: 10px;">
-                            <input type="text" id="nif_numeros" name="nif" required maxlength="8" placeholder="Números" style="flex: 3;">
-                            <input type="text" id="nif_letra" readonly placeholder="Letra" style="flex: 1; text-align: center; font-weight: bold;">
+                            <input type="text" id="nif_numeros" name="nif_numeros" required maxlength="8" placeholder="Números" style="flex: 3;">
+
+                            <input type="text" id="nif_letra" name="nif_letra" readonly placeholder="Letra" style="flex: 1; text-align: center; font-weight: bold;">
                         </div>
                     </div>
 

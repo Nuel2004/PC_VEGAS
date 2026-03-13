@@ -34,6 +34,11 @@
                         onclick="abrirModal(this)">
                     Ver Detalle
                 </button>
+
+                <button type="button" class="btn-buy" 
+                        onclick="añadirAlCarrito(${p.idProducto})">
+                    🛒 Comprar
+                </button>
             </div>
         </c:forEach>
     </c:when>

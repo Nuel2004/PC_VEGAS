@@ -245,9 +245,7 @@ public class PedidosDAO implements IPedidosDAO {
         return lineas;
     }
 
-    // ----------------------------------------------------------------------
-    // REGISTRAR PEDIDO (TRANSACCIÓN) -> INSERT pedidos + INSERT lineaspedidos
-    // ----------------------------------------------------------------------
+
     /**
      * Registra un pedido completo en una transacción atómica. Inserta la
      * cabecera en 'pedidos' y luego recorre la lista para insertar en
@@ -282,7 +280,6 @@ public class PedidosDAO implements IPedidosDAO {
             conn = ConnectionFactory.getConnection();
             conn.setAutoCommit(false);
 
-            // Recalcular importes + IVA fijo (base imponible)
             double subtotal = 0.0;
             for (LineaPedido l : carrito.getLineas()) {
                 if (l != null && l.getProductoObj() != null) {
@@ -292,7 +289,6 @@ public class PedidosDAO implements IPedidosDAO {
             carrito.setImporte(subtotal);
             carrito.setIva(subtotal * 0.21);
 
-            // 1) Insert pedido en estado FINAL
             psPedido = conn.prepareStatement(sqlInsertPedido, Statement.RETURN_GENERATED_KEYS);
             psPedido.setString(1, ESTADO_FINAL);
             psPedido.setInt(2, carrito.getIdUsuario());
@@ -310,7 +306,6 @@ public class PedidosDAO implements IPedidosDAO {
             }
             idPedidoGenerado = rsKeys.getInt(1);
 
-            // 2) Insert líneas
             psLinea = conn.prepareStatement(sqlInsertLinea);
 
             for (LineaPedido l : carrito.getLineas()) {
@@ -405,8 +400,6 @@ public class PedidosDAO implements IPedidosDAO {
                 p.setImporte(rs.getDouble("importe"));
                 p.setIva(rs.getDouble("iva"));
 
-                // ¡IMPORTANTE! Cargamos los productos de este pedido para poder pintarlos
-                // Reutilizamos el método que ya tienes en esta misma clase
                 p.setLineas(this.getLineasPedido(p.getIdPedido()));
 
                 lista.add(p);
@@ -419,6 +412,5 @@ public class PedidosDAO implements IPedidosDAO {
 
     @Override
     public void close() {
-        // No-op (se usa try-with-resources en cada método)
     }
 }

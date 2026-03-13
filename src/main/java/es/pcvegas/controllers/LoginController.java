@@ -57,16 +57,12 @@ public class LoginController extends HttpServlet {
             Usuario usuarioValidado = udao.login(email, passwordMD5);
 
             if (usuarioValidado != null) {
-                // LOGIN CORRECTO
                 sesion.setAttribute("usuario", usuarioValidado);
 
-                // --- GESTIÓN DEL CARRITO ---
                 if (usuarioValidado.getUltimoAcceso() == null) {
-                    // Usuario NUEVO: Intentamos recuperar carrito de cookie
                     Map<Integer, Integer> mapaCookie = Utilitis.leerCookieCarrito(request);
 
                     if (mapaCookie != null && !mapaCookie.isEmpty()) {
-                        // CONVERTIR MAPA A OBJETO PEDIDO
                         Pedido carritoRecuperado = new Pedido();
                         carritoRecuperado.setIdUsuario(usuarioValidado.getIdUsuario());
 
@@ -89,7 +85,6 @@ public class LoginController extends HttpServlet {
                             }
                         }
 
-                        // Recalcular importes
                         if (!carritoRecuperado.getLineas().isEmpty()) {
                             carritoRecuperado.setImporte(subtotal);
                             carritoRecuperado.setIva(subtotal * 0.21);
@@ -99,17 +94,13 @@ public class LoginController extends HttpServlet {
                     Utilitis.borrarCookieCarrito(response);
 
                 } else {
-                    // Usuario ANTIGUO: Intentamos recuperar su carrito de la BD
-                    Utilitis.borrarCookieCarrito(response); // Borramos cookie para que no interfiera
+                    Utilitis.borrarCookieCarrito(response); 
 
                     IPedidosDAO pdao = daof.getPedidosDAO();
 
-                    // Buscamos si tiene un pedido en estado 'c' guardado
                     Pedido carritoBD = pdao.getPedidoEnCurso(usuarioValidado.getIdUsuario());
 
                     if (carritoBD != null && !carritoBD.getLineas().isEmpty()) {
-                        // ¡Lo encontramos! Lo metemos en la sesión
-                        // Recalculamos totales por seguridad
                         double subtotal = 0.0;
                         for (LineaPedido l : carritoBD.getLineas()) {
                             if (l.getProductoObj() != null) {
@@ -121,7 +112,6 @@ public class LoginController extends HttpServlet {
 
                         sesion.setAttribute("carrito", carritoBD);
                     } else {
-                        // Si no tiene nada en BD, limpiamos la sesión por si acaso
                         sesion.removeAttribute("carrito");
                     }
                 }

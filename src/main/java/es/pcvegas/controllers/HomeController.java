@@ -54,11 +54,9 @@ public class HomeController extends HttpServlet {
 
         javax.servlet.http.HttpSession session = request.getSession();
 
-        // 0) DAO
         DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
         IProductosDAO pdao = daof.getProductosDAO();
 
-        // 1) --- CARGAR CARRITO DESDE COOKIE (solo anónimo y solo si no hay carrito en sesión) ---
         es.pcvegas.beans.Usuario usuario = (es.pcvegas.beans.Usuario) session.getAttribute("usuario");
         es.pcvegas.beans.Pedido carrito = (es.pcvegas.beans.Pedido) session.getAttribute("carrito");
 
@@ -75,7 +73,6 @@ public class HomeController extends HttpServlet {
                     int idProducto = entry.getKey();
                     int cantidad = entry.getValue();
 
-                    // Hidratar producto para que la vista no pete
                     es.pcvegas.beans.Producto p = pdao.getProductoDetalle(idProducto);
                     if (p == null) {
                         continue;
@@ -89,7 +86,6 @@ public class HomeController extends HttpServlet {
                     carrito.getLineas().add(linea);
                 }
 
-                // Recalcular totales
                 double subtotal = 0.0;
                 for (es.pcvegas.beans.LineaPedido l : carrito.getLineas()) {
                     if (l != null && l.getProductoObj() != null) {
@@ -99,21 +95,16 @@ public class HomeController extends HttpServlet {
                 carrito.setImporte(subtotal);
                 carrito.setIva(subtotal * 0.21);
 
-                // Guardar carrito en sesión
                 if (!carrito.getLineas().isEmpty()) {
                     session.setAttribute("carrito", carrito);
                 }
             }
         }
-        // ---------------------------------------------------------------------------
 
-        // 2) Pedir productos aleatorios para la tienda
         List<Producto> productosAleatorios = pdao.getProductosAleatorios();
 
-        // 3) Pasarlos a la vista
         request.setAttribute("productos", productosAleatorios);
 
-        // 4) Forward
         request.getRequestDispatcher("/jsp/tienda.jsp").forward(request, response);
     }
 }

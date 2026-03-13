@@ -53,7 +53,6 @@ public class BuscadorAjaxController extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        // 1) Parámetros
         String busqueda = request.getParameter("busqueda");
         if (busqueda != null) {
             busqueda = busqueda.trim();
@@ -62,7 +61,6 @@ public class BuscadorAjaxController extends HttpServlet {
             }
         }
 
-        // MULTIPLE: si no selecciona nada -> null (equivale a todas)
         String[] marcas = request.getParameterValues("marca");
         if (marcas != null && marcas.length == 0) {
             marcas = null;
@@ -72,7 +70,6 @@ public class BuscadorAjaxController extends HttpServlet {
         String precioMaxStr = request.getParameter("precioMax");
         String idCategoriaStr = request.getParameter("idCategoria");
 
-        // 2) Defaults de precios desde applicationScope (si existe)
         double defMin = 0.0;
         double defMax = 10000.0;
 
@@ -102,7 +99,6 @@ public class BuscadorAjaxController extends HttpServlet {
             }
         }
 
-        // Si vienen cruzados, los ordenamos
         if (precioMin > precioMax) {
             double tmp = precioMin;
             precioMin = precioMax;
@@ -117,14 +113,11 @@ public class BuscadorAjaxController extends HttpServlet {
             }
         }
 
-        // 3) DAO
         DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
         IProductosDAO pdao = daof.getProductosDAO();
 
-        // 4) Filtrar
         List<Producto> productosFiltrados = pdao.filtrarProductos(busqueda, marcas, precioMin, precioMax, idCategoria);
 
-        // 5) Pintar fragmento
         request.setAttribute("productos", productosFiltrados);
         request.getRequestDispatcher("/jsp/fragmentos/_gridProductos.jsp").forward(request, response);
     }

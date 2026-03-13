@@ -41,8 +41,6 @@ public class ConnectionFactory {
         try {
             if (dataSource == null) {
                 Context contextoInicial = new InitialContext();
-                // Buscamos el recurso definido en META-INF/context.xml o web.xml
-                // La ruta "java:comp/env/" es el estándar para recursos locales de la app
                 dataSource = (DataSource) contextoInicial.lookup("java:comp/env/jdbc/pc_vegas");
             }
             conexion = dataSource.getConnection();

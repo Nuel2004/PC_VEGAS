@@ -43,40 +43,32 @@ public class LogoutController extends HttpServlet {
                 Usuario u = (Usuario) uObj;
                 DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
 
-                // --- GUARDAR CARRITO EN BD ANTES DE SALIR ---
                 Pedido carritoSession = (Pedido) sesion.getAttribute("carrito");
 
                 if (carritoSession != null && !carritoSession.getLineas().isEmpty()) {
                     IPedidosDAO pdao = daof.getPedidosDAO();
 
-                    // 1. Buscamos si el usuario ya tenía un carrito abierto en BD
                     Pedido carritoBD = pdao.getPedidoEnCurso(u.getIdUsuario());
                     int idPedidoGuardar;
 
                     if (carritoBD != null) {
-                        // Si existe, usamos ese ID y borramos sus líneas viejas para sobrescribir
                         idPedidoGuardar = carritoBD.getIdPedido();
                         pdao.vaciarLineas(idPedidoGuardar);
                     } else {
-                        // Si no existe, creamos la cabecera del pedido nueva
                         carritoSession.setIdUsuario(u.getIdUsuario());
                         idPedidoGuardar = pdao.crearPedido(carritoSession);
                     }
 
-                    // 2. Guardamos las líneas actuales de la sesión en la BD
                     for (LineaPedido linea : carritoSession.getLineas()) {
-                        linea.setIdPedido(idPedidoGuardar); // Vinculamos la línea al ID del pedido
+                        linea.setIdPedido(idPedidoGuardar); 
                         pdao.agregarLinea(linea);
                     }
                 }
-                // ---------------------------------------------------
 
-                // Actualizar último acceso
                 IUsuariosDAO udao = daof.getUsuariosDAO();
                 udao.actualizarUltimoAcceso(u.getIdUsuario(), new Date(System.currentTimeMillis()));
             }
 
-            // Destruimos la sesión una vez los datos están a salvo
             sesion.invalidate();
         }
 

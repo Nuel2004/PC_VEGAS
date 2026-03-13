@@ -14,12 +14,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
-/**
- * Controlador del perfil de usuario.
- * <p>
- * Esta clase está anotada con {@code @MultipartConfig} para permitir subida de ficheros.
- * </p>
- */
 @WebServlet(name = "PerfilController", urlPatterns = {"/PerfilController", "/perfil"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
@@ -28,19 +22,9 @@ import javax.servlet.http.Part;
 )
 public class PerfilController extends HttpServlet {
 
-    /**
-     * Muestra el formulario de edición de perfil. Verifica que exista sesión
-     * activa.
-     *
-     * * @param request La solicitud HTTP.
-     * @param response La respuesta HTTP.
-     * @throws ServletException Si ocurre un error en el servlet.
-     * @throws IOException Si ocurre un error de E/S.
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Seguridad: Si no hay usuario, mandar al login
         HttpSession session = request.getSession();
         if (session.getAttribute("usuario") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
@@ -49,16 +33,6 @@ public class PerfilController extends HttpServlet {
         request.getRequestDispatcher("/jsp/perfil.jsp").forward(request, response);
     }
 
-    /**
-     * Procesa la actualización de datos del perfil. 1. Recoge los parámetros de
-     * texto. 2. Procesa la subida del fichero de avatar (si existe). 3.
-     * Actualiza el objeto usuario en sesión y en base de datos.
-     *
-     * * @param request La solicitud HTTP (Multipart).
-     * @param response La respuesta HTTP.
-     * @throws ServletException Si ocurre un error en el servlet.
-     * @throws IOException Si ocurre un error de E/S.
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -72,9 +46,6 @@ public class PerfilController extends HttpServlet {
             return;
         }
 
-        // Creamos una copia para intentar actualizar, así si falla la BD no corrompemos la sesión
-        // (En este caso simple, modificaremos el objeto pero con cuidado de no meter nulos)
-        // 1. Recogida de parámetros de texto
         String nombre = request.getParameter("nombre");
         String apellidos = request.getParameter("apellidos");
         String nif = request.getParameter("nif");
@@ -84,77 +55,67 @@ public class PerfilController extends HttpServlet {
         String localidad = request.getParameter("localidad");
         String provincia = request.getParameter("provincia");
 
-        // 2. Procesamiento de la Imagen (Avatar)
-        Part filePart = request.getPart("ficheroAvatar"); // nombre del input type="file"
+        String error = null;
+
+        if (nombre == null || nombre.trim().isEmpty()) {
+            error = "El nombre es obligatorio.";
+        } else if (apellidos == null || apellidos.trim().isEmpty()) {
+            error = "Los apellidos son obligatorios.";
+        } else if (nif == null || nif.trim().isEmpty()) {
+            error = "El NIF es obligatorio.";
+        } else if (telefono == null || telefono.trim().isEmpty()) {
+            error = "El teléfono es obligatorio.";
+        } else if (direccion == null || direccion.trim().isEmpty()) {
+            error = "La dirección es obligatoria.";
+        }
+
+        if (error != null) {
+            request.setAttribute("mensajeError", error);
+            request.getRequestDispatcher("/jsp/perfil.jsp").forward(request, response);
+            return;
+        }
+
+        Part filePart = request.getPart("ficheroAvatar");
         String avatarFilename = null;
 
         if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName().length() > 0) {
-            // Generamos nombre único: idUsuario_timestamp.jpg
-            String extension = ".jpg"; // Por simplificar asumimos jpg o extraemos extensión
+            String extension = ".jpg";
             if (filePart.getSubmittedFileName().contains(".")) {
                 extension = filePart.getSubmittedFileName().substring(filePart.getSubmittedFileName().lastIndexOf("."));
             }
             avatarFilename = "avatar_" + usuarioSesion.getIdUsuario() + "_" + System.currentTimeMillis() + extension;
-
             String rutaReal = getServletContext().getRealPath("/img");
 
             boolean subidaCorrecta = Utilitis.guardarImagen(filePart, rutaReal, avatarFilename);
             if (!subidaCorrecta) {
-                avatarFilename = null; // Si falla, no actualizamos la foto
+                avatarFilename = null;
             }
         }
 
-        // 3. Actualización del Objeto Usuario (SOLO SI NO SON NULL)
-        // Corrección del error: Si nif viene null, NO lo tocamos.
-        if (nombre != null && !nombre.isEmpty()) {
-            usuarioSesion.setNombre(nombre);
-        }
-        if (apellidos != null && !apellidos.isEmpty()) {
-            usuarioSesion.setApellidos(apellidos);
-        }
+        usuarioSesion.setNombre(nombre.trim());
+        usuarioSesion.setApellidos(apellidos.trim());
+        usuarioSesion.setNif(nif.trim());
+        usuarioSesion.setTelefono(telefono.trim());
+        usuarioSesion.setDireccion(direccion.trim());
+        usuarioSesion.setCodigoPostal(cp != null ? cp.trim() : "");
+        usuarioSesion.setLocalidad(localidad != null ? localidad.trim() : "");
+        usuarioSesion.setProvincia(provincia != null ? provincia.trim() : "");
 
-        // AQUÍ ESTABA EL FALLO: Solo actualizamos NIF si viene un valor real
-        if (nif != null && !nif.trim().isEmpty()) {
-            usuarioSesion.setNif(nif);
-        }
-
-        if (telefono != null) {
-            usuarioSesion.setTelefono(telefono);
-        }
-        if (direccion != null) {
-            usuarioSesion.setDireccion(direccion);
-        }
-        if (cp != null) {
-            usuarioSesion.setCodigoPostal(cp);
-        }
-        if (localidad != null) {
-            usuarioSesion.setLocalidad(localidad);
-        }
-        if (provincia != null) {
-            usuarioSesion.setProvincia(provincia);
-        }
-
-        // La foto solo se cambia si el usuario subió una nueva
-        String avatarParaGuardar = (avatarFilename != null) ? avatarFilename : usuarioSesion.getAvatar();
-
-        // 4. Guardar en Base de Datos
         DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
         IUsuariosDAO udao = daof.getUsuariosDAO();
 
-        boolean exito = udao.actualizarPerfil(usuarioSesion, avatarFilename); // Pasamos avatarFilename (puede ser null si no cambió)
+        boolean exito = udao.actualizarPerfil(usuarioSesion, avatarFilename);
 
         if (exito) {
-            // Si la BD actualizó bien, confirmamos el cambio de avatar en el objeto de sesión
             if (avatarFilename != null) {
                 usuarioSesion.setAvatar(avatarFilename);
             }
-            session.setAttribute("usuario", usuarioSesion); // Refrescamos sesión
+            session.setAttribute("usuario", usuarioSesion);
             request.setAttribute("mensajeExito", "Perfil actualizado correctamente.");
         } else {
             request.setAttribute("mensajeError", "No se pudieron guardar los cambios en la base de datos.");
         }
 
-        // 5. Volver a la vista
         request.getRequestDispatcher("/jsp/perfil.jsp").forward(request, response);
     }
 }

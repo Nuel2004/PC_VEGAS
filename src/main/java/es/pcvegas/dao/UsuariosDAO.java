@@ -65,7 +65,6 @@ public class UsuariosDAO implements IUsuariosDAO {
 
         try {
             cn = ConnectionFactory.getConnection();
-            // password ya viene en MD5 desde el controlador/utilitis
             String sql = "INSERT INTO usuarios (email, password, nombre, apellidos, nif, telefono, direccion, codigo_postal, localidad, provincia, ultimo_acceso, avatar) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)";
 
@@ -96,7 +95,6 @@ public class UsuariosDAO implements IUsuariosDAO {
         return id;
     }
 
-    // --- IMPLEMENTACIÓN DE LOS MÉTODOS QUE FALTABAN ---
     /**
      * Recupera un usuario por su email.
      *
@@ -238,7 +236,6 @@ public class UsuariosDAO implements IUsuariosDAO {
             cn = ConnectionFactory.getConnection();
             String sql = "UPDATE usuarios SET ultimo_acceso=? WHERE idusuario=?";
             ps = cn.prepareStatement(sql);
-            // Usamos Timestamp para guardar hora exacta
             ps.setTimestamp(1, new Timestamp(fecha.getTime()));
             ps.setInt(2, idusuario);
             ps.executeUpdate();

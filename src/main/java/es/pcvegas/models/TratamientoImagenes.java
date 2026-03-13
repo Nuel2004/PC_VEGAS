@@ -37,14 +37,12 @@ public class TratamientoImagenes {
                 return false; // No es una imagen válida
             }
 
-            // 1. Redimensionar a 100x100
             Image escalada = imagenOriginal.getScaledInstance(100, 100, Image.SCALE_SMOOTH);
             BufferedImage bufferedEscalada = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
             Graphics2D g2d = bufferedEscalada.createGraphics();
             g2d.drawImage(escalada, 0, 0, null);
             g2d.dispose();
 
-            // 3. Guardar el archivo final (.jpg)
             File directorio = new File(rutaDirectorio);
 
             File archivoFinal = new File(directorio, nombreFinal);

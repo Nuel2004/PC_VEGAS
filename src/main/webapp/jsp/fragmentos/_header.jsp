@@ -1,6 +1,8 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
+<script src="${pageContext.request.contextPath}/js/carrito_ajax.js"></script>
+
 <header class="topbar" style="justify-content: space-between;">
 
     <a href="${pageContext.request.contextPath}/inicio" title="Volver al inicio" style="display: flex; align-items: center;">
@@ -38,11 +40,19 @@
             </div>
         </c:if>
 
-        <a href="${pageContext.request.contextPath}/CarritoController" class="cart-btn">
+        <%-- En _header.jsp --%>
+        <a href="${pageContext.request.contextPath}/carrito" class="cart-btn">
             🛒 Carrito 
-            <c:if test="${not empty sessionScope.carrito and sessionScope.carrito.totalArticulos > 0}">
-                (${sessionScope.carrito.totalArticulos})
-            </c:if>
+            <span id="contador-carrito">
+                <c:choose>
+                    <c:when test="${not empty sessionScope.carrito}">
+                        (${sessionScope.carrito.totalArticulos})
+                    </c:when>
+                    <c:otherwise>
+                        (0)
+                    </c:otherwise>
+                </c:choose>
+            </span>
         </a>
     </nav>
 </header>

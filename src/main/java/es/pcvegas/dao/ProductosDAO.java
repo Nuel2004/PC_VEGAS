@@ -25,7 +25,6 @@ public class ProductosDAO implements IProductosDAO {
     @Override
     public List<Producto> getProductos() {
         List<Producto> lista = new ArrayList<>();
-        // En una app real quizás limitarías esto (LIMIT 20)
         String sql = "SELECT * FROM productos";
 
         Connection conexion = null;
@@ -102,7 +101,7 @@ public class ProductosDAO implements IProductosDAO {
      */
     @Override
     public List<Producto> getProductosOferta() {
-        return new ArrayList<>(); // Pendiente de implementación
+        return new ArrayList<>();
     }
 
     /**
@@ -139,7 +138,6 @@ public class ProductosDAO implements IProductosDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            // Usamos tu método privado close
             this.close(resultado, preparada, conexion);
         }
         return p;
@@ -169,7 +167,6 @@ public class ProductosDAO implements IProductosDAO {
     @Override
     public List<Producto> getProductosAleatorios() {
         List<Producto> lista = new ArrayList<>();
-        // Magia de MySQL: Ordenar aleatoriamente y coger 8
         String sql = "SELECT * FROM productos ORDER BY RAND() LIMIT 9";
 
         Connection conexion = null;
@@ -281,17 +278,13 @@ public class ProductosDAO implements IProductosDAO {
         parametros.add(precioMin);
         parametros.add(precioMax);
 
-        // 1) Búsqueda por nombre
         if (busqueda != null && !busqueda.trim().isEmpty()) {
             sql.append(" AND nombre LIKE ?");
             parametros.add("%" + busqueda.trim() + "%");
         }
 
-        // 2) Marcas múltiples (IN)
-        // Si no selecciona ninguna marca -> no filtramos por marca (equivale a todas)
         if (marcas != null && marcas.length > 0) {
 
-            // Filtrar valores vacíos por seguridad
             List<String> marcasValidas = new ArrayList<>();
             for (String m : marcas) {
                 if (m != null && !m.trim().isEmpty()) {
@@ -312,7 +305,6 @@ public class ProductosDAO implements IProductosDAO {
             }
         }
 
-        // 3) Categoría
         if (idCategoria != null && idCategoria > 0) {
             sql.append(" AND idcategoria = ?");
             parametros.add(idCategoria);

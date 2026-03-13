@@ -40,13 +40,11 @@ public class MisPedidosController extends HttpServlet {
         HttpSession session = request.getSession();
         Usuario usuario = (Usuario) session.getAttribute("usuario");
 
-        // Seguridad: Si no hay usuario, al login
         if (usuario == null) {
             request.getRequestDispatcher("/login").forward(request, response);
             return;
         }
 
-        // Recuperamos los pedidos
         DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
         IPedidosDAO pedidosDAO = daof.getPedidosDAO();
 

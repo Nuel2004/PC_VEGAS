@@ -24,7 +24,7 @@ public class Pedido implements Serializable {
     private Usuario usuarioObj;
 
     public Pedido() {
-        this.estado = "c"; // Por defecto es carrito
+        this.estado = "c"; 
         this.lineas = new ArrayList<>();
         this.importe = 0.0;
         this.iva = 0.0;
@@ -46,9 +46,7 @@ public class Pedido implements Serializable {
         int total = 0;
         if (this.lineas != null) {
             for (LineaPedido linea : this.lineas) {
-                if (linea != null) {
-                    total += linea.getCantidad();
-                }
+                total += linea.getCantidad();
             }
         }
         return total;

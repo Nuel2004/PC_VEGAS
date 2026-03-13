@@ -187,7 +187,6 @@ public class CarritoController extends HttpServlet {
                 request.getRequestDispatcher("/jsp/gracias.jsp").forward(request, response);
 
             } else {
-                // CORREGIDO: Usamos forward
                 request.getRequestDispatcher("/inicio").forward(request, response);
             }
             return;
