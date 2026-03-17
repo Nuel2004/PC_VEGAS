@@ -84,7 +84,7 @@ public class RegistroController extends HttpServlet {
                 try {
                     String letras = "TRWAGMYFPDXBNJZSQVHLCKE";
                     int dniNum = Integer.parseInt(nifNumeros.trim());
-                    nifLetra = String.valueOf(letras.charAt(dniNum % 23)); // ¡Magia!
+                    nifLetra = String.valueOf(letras.charAt(dniNum % 23)); 
                 } catch (NumberFormatException e) {
                     request.setAttribute("error", "El DNI debe contener 8 números válidos.");
                     request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
