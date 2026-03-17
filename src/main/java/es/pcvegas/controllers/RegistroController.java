@@ -32,7 +32,7 @@ public class RegistroController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // --- VALIDACIÓN AJAX DEL EMAIL ---
+       
         String accion = request.getParameter("accion");
         if ("comprobarEmail".equals(accion)) {
             String email = request.getParameter("email");
@@ -47,7 +47,7 @@ public class RegistroController extends HttpServlet {
             return;
         }
 
-        // --- PROCESO DE REGISTRO ---
+        
         request.setCharacterEncoding("UTF-8");
         int idGenerado = -1;
         DAOFactory daof = DAOFactory.getDAOFactory(DAOFactory.MYSQL);
@@ -57,7 +57,7 @@ public class RegistroController extends HttpServlet {
             Usuario u = new Usuario();
             BeanUtils.populate(u, request.getParameterMap());
 
-            // 1. VALIDACIÓN BÁSICA (Anti-Espacios)
+            
             if (u.getNombre() == null || u.getNombre().trim().isEmpty()
                     || u.getApellidos() == null || u.getApellidos().trim().isEmpty()
                     || u.getPassword() == null || u.getPassword().trim().isEmpty()
@@ -69,19 +69,17 @@ public class RegistroController extends HttpServlet {
                 return;
             }
 
-            // 2. VALIDACIÓN NIF (CORREGIDA)
+            
             String nifNumeros = request.getParameter("nif_numeros");
             String nifLetra = request.getParameter("nif_letra");
 
-            // SOLO comprobamos que los números existan.
+            
             if (nifNumeros == null || nifNumeros.trim().isEmpty()) {
                 request.setAttribute("error", "El número de DNI es obligatorio.");
                 request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
                 return;
             }
 
-            // 3. CÁLCULO DE LETRA 
-            // Si el usuario no mandó letra, la calculamos aquí.
             if (nifLetra == null || nifLetra.trim().isEmpty()) {
                 try {
                     String letras = "TRWAGMYFPDXBNJZSQVHLCKE";
@@ -94,9 +92,8 @@ public class RegistroController extends HttpServlet {
                 }
             }
 
-            // Guardamos
+            
             u.setNif(nifNumeros.trim() + nifLetra.trim().toUpperCase());
-            // Limpiamos espacios del resto de datos
             u.setNombre(u.getNombre().trim());
             u.setApellidos(u.getApellidos().trim());
             u.setDireccion(u.getDireccion().trim());
@@ -104,7 +101,6 @@ public class RegistroController extends HttpServlet {
             u.setEmail(u.getEmail().trim());
             u.setPassword(u.getPassword().trim());
 
-            // 4. ENCRIPTADO Y REGISTRO
             String passCifrada = Utilitis.getMD5(u.getPassword());
             u.setPassword(passCifrada);
             u.setAvatar("default.jpg"); // Avatar temporal
@@ -112,7 +108,7 @@ public class RegistroController extends HttpServlet {
             idGenerado = udao.registrar(u);
 
             if (idGenerado > 0) {
-                // 5. SUBIDA DE IMAGEN (Opcional)
+                
                 Part filePart = request.getPart("ficheroAvatar");
                 if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName().length() > 0) {
                     String extension = ".jpg";
@@ -129,7 +125,7 @@ public class RegistroController extends HttpServlet {
                     }
                 }
 
-                // ÉXITO
+                
                 response.sendRedirect(request.getContextPath() + "/login");
 
             } else {
