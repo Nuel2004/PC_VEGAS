@@ -73,15 +73,15 @@ public class RegistroController extends HttpServlet {
             String nifNumeros = request.getParameter("nif_numeros");
             String nifLetra = request.getParameter("nif_letra");
 
-// SOLO comprobamos que los números existan.
+            // SOLO comprobamos que los números existan.
             if (nifNumeros == null || nifNumeros.trim().isEmpty()) {
                 request.setAttribute("error", "El número de DNI es obligatorio.");
                 request.getRequestDispatcher("/jsp/registro.jsp").forward(request, response);
                 return;
             }
 
-// 3. CÁLCULO DE LETRA (La clave del éxito)
-// Si el usuario (o JS) no mandó letra, la calculamos aquí.
+            // 3. CÁLCULO DE LETRA 
+            // Si el usuario no mandó letra, la calculamos aquí.
             if (nifLetra == null || nifLetra.trim().isEmpty()) {
                 try {
                     String letras = "TRWAGMYFPDXBNJZSQVHLCKE";
@@ -94,7 +94,7 @@ public class RegistroController extends HttpServlet {
                 }
             }
 
-// Guardamos
+            // Guardamos
             u.setNif(nifNumeros.trim() + nifLetra.trim().toUpperCase());
             // Limpiamos espacios del resto de datos
             u.setNombre(u.getNombre().trim());

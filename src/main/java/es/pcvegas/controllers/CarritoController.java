@@ -170,7 +170,6 @@ public class CarritoController extends HttpServlet {
             Usuario usuario = (Usuario) session.getAttribute("usuario");
 
             if (usuario == null) {
-                // CORREGIDO: Usamos forward
                 request.getRequestDispatcher("/login").forward(request, response);
                 return;
             }
